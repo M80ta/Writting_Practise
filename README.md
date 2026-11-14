@@ -1,9 +1,10 @@
-# EnglishPractise · Letter & Line
+# Writting_Practise · Letter & Line
 
 繁體中文介面的中英練習紙工作室：英文雙線、中文注音田字格／米字格／方格，逐行選字型、輸入內容、調整尺寸，產生 A4 可列印練習紙。
 
-- 網站預定網址：**https://m80ta.github.io/EnglishPractise/**（GitHub Pages 部署完成後生效）
-- 公開儲存庫：**https://github.com/M80ta/EnglishPractise**
+- 網站網址：**https://m80ta.github.io/Writting_Practise/**
+- 中文注音入口：**https://m80ta.github.io/Writting_Practise/chinese.html**
+- 公開儲存庫：**https://github.com/M80ta/Writting_Practise**
 - 授權：**PolyForm Noncommercial 1.0.0**。非商業使用依完整授權條款；超出允許範圍的商業使用必須事先另行取得書面授權。
 
 ## 開始使用
@@ -23,8 +24,8 @@
 只需預覽，不需安裝相依套件：
 
 ```powershell
-git clone git@github.com:M80ta/EnglishPractise.git
-cd EnglishPractise\javascript
+git clone git@github.com:M80ta/Writting_Practise.git
+cd Writting_Practise\javascript
 node scripts/preview.cjs
 ```
 
@@ -51,7 +52,7 @@ npm run build
 ## 原始碼與發布
 
 ```text
-EnglishPractise/
+Writting_Practise/
   javascript/              目前發布的純前端版本
     worksheet.js           驗證、版面計算與 SVG 排版
     app.js                 編輯、儲存、預覽與列印
@@ -70,6 +71,6 @@ EnglishPractise/
 
 ## 授權與商業使用
 
-**原始碼公開不代表允許商業使用。** 使用、修改及散布需遵守 [LICENSE.md](LICENSE.md)，並保留 [NOTICE](NOTICE)。商業授權需求請透過 [專案 Issues](https://github.com/M80ta/EnglishPractise/issues) 聯絡權利人 M80ta，事先取得書面授權或另行簽訂商用授權合約；提出申請不代表已獲授權。
+**原始碼公開不代表允許商業使用。** 使用、修改及散布需遵守 [LICENSE.md](LICENSE.md)，並保留 [NOTICE](NOTICE)。商業授權需求請透過 [專案 Issues](https://github.com/M80ta/Writting_Practise/issues) 聯絡權利人 M80ta，事先取得書面授權或另行簽訂商用授權合約；提出申請不代表已獲授權。
 
 內附字型依各自原始條款授權，權利與程式的非商業授權分開判斷。中文注音字型保留上游的 CC BY 4.0、SIL OFL、Apache 2.0 與相關署名聲明；詳見第三方授權文件。

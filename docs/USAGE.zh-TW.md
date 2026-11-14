@@ -2,7 +2,7 @@
 
 ## 開啟網站
 
-正式網站預定發布於 https://m80ta.github.io/EnglishPractise/ 。亦可直接開啟 `javascript/index.html`。部分瀏覽器限制本機檔案字型或儲存時，可在 `javascript/` 執行 `node scripts/preview.cjs`，開啟 http://127.0.0.1:4173/ 。
+網站網址為 https://m80ta.github.io/Writting_Practise/ ，中文注音入口為 https://m80ta.github.io/Writting_Practise/chinese.html 。亦可直接開啟 `javascript/index.html`。部分瀏覽器限制本機檔案字型或儲存時，可在 `javascript/` 執行 `node scripts/preview.cjs`，開啟 http://127.0.0.1:4173/ 。
 
 ## 建立第一張練習紙
 

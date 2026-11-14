@@ -4,10 +4,19 @@
 
 - 本機根目錄：`D:\Code_2026\Python\EnglishPractise`
 - GitHub owner：`M80ta`
-- 預定公開 repository：`https://github.com/M80ta/EnglishPractise`
-- SSH remote：`git@github.com:M80ta/EnglishPractise.git`
+- 公開 repository：`https://github.com/M80ta/Writting_Practise`
+- SSH remote：`git@github.com:M80ta/Writting_Practise.git`
 - 主要分支：`main`
-- Pages 預定網址：`https://m80ta.github.io/EnglishPractise/`
+- Pages 網址：`https://m80ta.github.io/Writting_Practise/`
+
+Repository 正式名稱依權利人指定為 **Writting_Practise**。目前這台電腦的既有資料夾仍是 `EnglishPractise`；新電腦 clone 時，預設資料夾名稱會是 `Writting_Practise`。兩者都以同一個 GitHub remote 為準。
+
+既有 checkout 若需要更新遠端名稱：
+
+```powershell
+git remote set-url origin git@github.com:M80ta/Writting_Practise.git
+git remote -v
+```
 
 Git 作者名稱／email、SSH 登入帳號、GitHub 連接工具登入與 repository 權限是不同設定。SSH 成功不代表遠端 repository 已建立或 Pages 已發布，必須分別驗證。
 
@@ -20,7 +29,7 @@ cd D:\Code_2026\Python\EnglishPractise
 git init -b main
 git config user.name M80ta
 git config user.email 165467452+M80ta@users.noreply.github.com
-git remote add origin git@github.com:M80ta/EnglishPractise.git
+git remote add origin git@github.com:M80ta/Writting_Practise.git
 git status
 ```
 
@@ -38,7 +47,7 @@ GitHub 回傳 `Hi M80ta! You've successfully authenticated...` 表示 SSH 登入
 
 ## 建立公開 repository 與首次推送
 
-在已登入 M80ta 的 GitHub 建立名為 **EnglishPractise** 的 **Public** repository。保留空白，不預先產生 README、`.gitignore` 或 license，讓本機完整歷史作為來源。若已有同名非空 repository，先確認用途，不應強制覆寫。
+在已登入 M80ta 的 GitHub 建立名為 **Writting_Practise** 的 **Public** repository。保留空白，不預先產生 README、`.gitignore` 或 license，讓本機完整歷史作為來源。若已有同名非空 repository，先確認用途，不應強制覆寫。
 
 檢查即將公開的檔案並提交：
 

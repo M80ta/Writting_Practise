@@ -13,9 +13,9 @@ test("HTML and CSS resolve every local asset under GitHub Pages subdirectories a
   for (const ref of [...references, ...fontRefs]) {
     assert.ok(ref.startsWith("./"), `expected relative resource: ${ref}`);
     assert.ok(fs.existsSync(path.resolve(root, ref)), `missing resource: ${ref}`);
-    for (const base of ["https://example.github.io/EnglishPractise/javascript/index.html", "file:///D:/EnglishPractise/javascript/index.html"]) {
+    for (const [base, prefix] of [["https://example.github.io/Writting_Practise/index.html", "/Writting_Practise/"], ["https://example.github.io/Writting_Practise/javascript/index.html", "/Writting_Practise/javascript/"], ["file:///D:/EnglishPractise/javascript/index.html", "/javascript/"]]) {
       const resolved = new URL(ref, base);
-      assert.ok(resolved.pathname.includes("/javascript/"));
+      assert.ok(resolved.pathname.includes(prefix));
     }
   }
   for (const file of ["app.js", "worksheet.js"]) {

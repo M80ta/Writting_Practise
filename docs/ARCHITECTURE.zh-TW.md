@@ -2,7 +2,7 @@
 
 ## 版本與正式入口
 
-Git repository 根目錄是 `EnglishPractise/`。正式網站來源為 `javascript/`，發布檔案為 `javascript/dist/`。`rust/` 保留 Rust/Axum 本機參考版，根目錄 `index.html` 保留最早單檔版本。
+Git repository 根目錄是 `Writting_Practise/`。正式網站來源為 `javascript/`，發布檔案為 `javascript/dist/`。`rust/` 保留 Rust/Axum 本機參考版，根目錄 `index.html` 保留最早單檔版本。
 
 ## 元件
 
