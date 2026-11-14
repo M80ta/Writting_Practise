@@ -2,14 +2,38 @@
 "use strict";
 // Shared by the browser and Node tests. No network, DOM, or runtime dependencies.
 (function (root, factory) {
-  const api = factory();
+  const api = factory(typeof module === "object" && module.exports ? require("./zhuyin-data.js") : root.LetterLinesZhuyin);
   if (typeof module === "object" && module.exports) module.exports = api;
   else root.LetterLines = api;
-})(globalThis, function () {
+})(globalThis, function (zhuyinData) {
   const PAPER = Object.freeze({ A4: [210, 297], A5: [148, 210], Letter: [215.9, 279.4] });
-  const FONTS = Object.freeze({ hand: "'Patrick Hand', sans-serif", cursive: "'Caveat', cursive", sans: "Arial, sans-serif", serif: "Georgia, serif", mono: "'Courier New', monospace" });
+  const FONTS = Object.freeze({ hand: "'Patrick Hand', sans-serif", cursive: "'Caveat', cursive", sans: "Arial, sans-serif", serif: "Georgia, serif", mono: "'Courier New', monospace", zhuyin: "'Bpmf Zihi Kai', serif", kai: "'Bpmf Zihi Kai', serif" });
+  const covered = new Set(Array.from(zhuyinData?.supported || ""));
+  const isHan = (text) => /^\p{Script=Han}/u.test(text);
+  const segmenter = typeof Intl.Segmenter === "function" ? new Intl.Segmenter("zh-Hant", { granularity: "grapheme" }) : null;
+  function splitText(text) {
+    if (segmenter) return Array.from(segmenter.segment(text), (entry) => entry.segment);
+    const result = [];
+    for (const char of text) {
+      if (result.length && /\p{Mark}/u.test(char)) result[result.length - 1] += char;
+      else result.push(char);
+    }
+    return result;
+  }
+  function getReadingOptions(text) {
+    const units = splitText(text);
+    if (units.length !== 1 || !isHan(units[0])) return [];
+    const char = Array.from(units[0])[0];
+    if (!covered.has(char)) return [];
+    return [{ value: char, label: "預設讀音" }, ...(zhuyinData.alternatives[char] || []).map((variant) => ({ value: char + String.fromCodePoint(0xe01e0 + variant), label: `讀音 ${variant + 1}` })), { value: char + String.fromCodePoint(0xe01e0), label: "不顯示注音" }];
+  }
+  function displayText(row, text) {
+    return row.font === "kai" ? splitText(text).map((unit) => isHan(unit) && covered.has(Array.from(unit)[0]) ? Array.from(unit)[0] + String.fromCodePoint(0xe01e0) : unit).join("") : text;
+  }
   const createRow = (text = "", extra = {}) => ({ text, font: "hand", style: "dashed", font_size_mm: 10.5, placement: "cells", repeat: false, repeat_count: 1, cells: [], ...extra });
-  const createWorksheet = (rows = []) => ({ title: "A little practice, every day.", show_header: true, paper_size: "A4", orientation: "portrait", print_mode: "color", margin_mm: 14, rows_per_page: 10, columns: 12, cell_width_mm: 15, cell_height_mm: 16, row_gap_mm: 5, vertical_guides: true, rows });
+  const createWorksheet = (rows = []) => ({ title: "A little practice, every day.", show_header: true, paper_size: "A4", orientation: "portrait", print_mode: "color", margin_mm: 14, rows_per_page: 10, columns: 12, cell_width_mm: 15, cell_height_mm: 16, row_gap_mm: 5, vertical_guides: true, grid_style: "english", rows });
+  const createChineseWorksheet = () => ({ ...createWorksheet(), title: "每天一點，練出好字。", grid_style: "tian", rows_per_page: 8, columns: 6, cell_width_mm: 30, cell_height_mm: 24, row_gap_mm: 4,
+    rows: [createRow("一二三四五六", { font: "zhuyin", font_size_mm: 16, style: "solid" }), createRow("一二三四五六", { font: "zhuyin", font_size_mm: 16 }), createRow("日月山水田土", { font: "zhuyin", font_size_mm: 16 }), createRow("你我他她它好", { font: "zhuyin", font_size_mm: 16, style: "light" }), createRow("學校老師同學", { font: "zhuyin", font_size_mm: 16 }), createRow("春夏秋冬天地", { font: "kai", font_size_mm: 16, style: "solid" })] });
   const length = (text) => Array.from(text).length;
   const record = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
   const number = (value) => String(Number(value.toFixed(4)));
@@ -41,6 +65,7 @@
     choice(config.paper_size, Object.keys(PAPER), "紙張大小");
     choice(config.orientation, ["portrait", "landscape"], "列印方向");
     choice(config.print_mode, ["color", "grayscale"], "列印色彩");
+    choice(config.grid_style, ["english", "tian", "mi", "square"], "書寫格型");
     boolean(config.show_header, "紙張抬頭");
     boolean(config.vertical_guides, "直向分格輔助線");
     range(config.margin_mm, 8, 30, "邊界 (mm)");
@@ -58,6 +83,7 @@
       choice(row.font, Object.keys(FONTS), "字型");
       choice(row.style, ["solid", "dashed", "light", "blank"], "範字樣式");
       choice(row.placement, ["cells", "flow"], "排列方式");
+      if (config.grid_style !== "english" && row.placement !== "cells") throw new Error("中文格型請使用逐格排列。");
       boolean(row.repeat, "逐格重複");
       range(row.font_size_mm, 4, 22, "字級 (mm)");
       // Preserve earlier Rust v1 projects that used automatic fill instead of a count.
@@ -94,12 +120,32 @@
   function drawText(row, text, x, y, availableWidth, centered, rowHeight, ink, light) {
     if (!text || row.style === "blank") return "";
     const size = Math.min(row.font_size_mm, rowHeight * 0.88);
-    const fitting = length(text) * size * 0.67 > availableWidth ? ` textLength="${number(availableWidth)}" lengthAdjust="spacingAndGlyphs"` : "";
+    const fitting = splitText(text).length * size * (["zhuyin", "kai"].includes(row.font) ? 1.5 : 0.67) > availableWidth ? ` textLength="${number(availableWidth)}" lengthAdjust="spacingAndGlyphs"` : "";
     const style = {
       solid: `fill="${ink}"`, light: `fill="${light}"`,
       dashed: `fill="none" stroke="${ink}" stroke-width=".2" stroke-dasharray=".55 .5" stroke-linecap="round" stroke-linejoin="round"`,
     }[row.style];
-    return `<text x="${number(x)}" y="${number(y)}" font-family="${FONTS[row.font]}" font-size="${number(size)}" text-anchor="${centered ? "middle" : "start"}" data-max-width="${number(availableWidth)}" xml:space="preserve" ${style}${fitting}>${escapeXml(text)}</text>`;
+    return `<text x="${number(x)}" y="${number(y)}" font-family="${FONTS[row.font]}" font-size="${number(size)}" text-anchor="${centered ? "middle" : "start"}" data-max-width="${number(availableWidth)}" xml:space="preserve" ${style}${fitting}>${escapeXml(displayText(row, text))}</text>`;
+  }
+
+  function drawChineseCell(config, row, text, x, y, ink, rule, light) {
+    const size = Math.min(row.font_size_mm, config.cell_height_mm * .88, config.cell_height_mm - 2, (config.cell_width_mm - 2) / 1.5);
+    const left = x + (config.cell_width_mm - size * 1.5) / 2;
+    const top = y + (config.cell_height_mm - size) / 2;
+    const guide = `stroke="${rule}" stroke-width=".17" stroke-dasharray=".6 1"`;
+    let svg = `<rect class="han-grid" x="${number(left)}" y="${number(top)}" width="${number(size)}" height="${number(size)}" fill="none" stroke="${rule}" stroke-width=".22"/>`;
+    if (config.grid_style !== "square") {
+      svg += line(left + size / 2, top, left + size / 2, top + size, guide);
+      svg += line(left, top + size / 2, left + size, top + size / 2, guide);
+    }
+    if (config.grid_style === "mi") {
+      svg += line(left, top, left + size, top + size, guide);
+      svg += line(left + size, top, left, top + size, guide);
+    }
+    if (config.vertical_guides) svg += `<rect class="zhuyin-grid" x="${number(left + size)}" y="${number(top)}" width="${number(size * .5)}" height="${number(size)}" fill="none" stroke="${rule}" stroke-width=".15" stroke-dasharray=".5 1"/>`;
+    // Font metrics: 1024 units per em, ascent 900, Han+Zhuyin advance 1536.
+    svg += drawText({ ...row, font_size_mm: size }, text, left, top + size * 900 / 1024, size * 1.5, false, config.cell_height_mm, ink, light);
+    return svg;
   }
 
   function renderWorksheet(input) {
@@ -114,8 +160,11 @@
     const warnings = [];
     if (rowsPerPage !== config.rows_per_page) warnings.push(`依目前紙張與格高，每頁最多容納 ${rowsPerPage} 行，已自動分頁。`);
     if (columns !== config.columns) warnings.push(`依目前紙張與格寬，每行最多容納 ${columns} 格；未顯示的格子內容仍會保留。`);
-    if (config.rows.some((row) => row.placement === "cells" && (length(row.text) > columns || row.cells.slice(columns).some((text) => text)))) {
+    if (config.rows.some((row) => row.placement === "cells" && (splitText(row.text).length > columns || row.cells.slice(columns).some((text) => text)))) {
       warnings.push("部分逐格文字超出每行格數，列印僅顯示可見的格子。可增加格數、縮小格寬或切換單字／句子模式。");
+    }
+    if (config.rows.some((row) => row.font === "zhuyin" && [row.text, ...row.cells.filter((cell) => cell !== null)].some((text) => splitText(text).some((unit) => isHan(unit) && !covered.has(Array.from(unit)[0]))))) {
+      warnings.push("部分國字不在這款注音字型的注音字集內，可能僅顯示國字或替代字形，請確認列印內容。");
     }
     const pageCount = Math.ceil(Math.max(1, config.rows.length) / rowsPerPage);
     const gray = config.print_mode === "grayscale";
@@ -126,12 +175,12 @@
     const gridX = (width - gridWidth) / 2;
     const pages = [];
     for (let pageIndex = 0; pageIndex < pageCount; pageIndex++) {
-      const svg = [`<svg xmlns="http://www.w3.org/2000/svg" class="worksheet-svg" viewBox="0 0 ${width} ${height}" width="${width}mm" height="${height}mm" role="group" aria-label="英文練習紙，第 ${pageIndex + 1} 頁"><rect width="${width}" height="${height}" fill="white"/>`];
+      const svg = [`<svg xmlns="http://www.w3.org/2000/svg" class="worksheet-svg" viewBox="0 0 ${width} ${height}" width="${width}mm" height="${height}mm" role="group" aria-label="書寫練習紙，第 ${pageIndex + 1} 頁"><rect width="${width}" height="${height}" fill="white"/>`];
       if (config.show_header) {
         svg.push(`<text x="${margin}" y="${margin + 6}" font-family="'Patrick Hand', sans-serif" font-size="7" fill="${ink}" data-max-width="${number(width - 2 * margin)}">${escapeXml(config.title)}</text>`);
-        svg.push(`<text x="${margin}" y="${margin + 19}" font-family="Arial, sans-serif" font-size="2.7" letter-spacing=".65" fill="${ink}">NAME</text>`);
+        svg.push(`<text x="${margin}" y="${margin + 19}" font-family="Arial, sans-serif" font-size="2.7" letter-spacing=".65" fill="${ink}">${config.grid_style === "english" ? "NAME" : "姓名"}</text>`);
         svg.push(line(margin + 13, margin + 19.6, width * 0.52, margin + 19.6, `stroke="${rule}" stroke-width=".2"`));
-        svg.push(`<text x="${number(width * 0.64)}" y="${margin + 19}" font-family="Arial, sans-serif" font-size="2.7" letter-spacing=".65" fill="${ink}">DATE</text>`);
+        svg.push(`<text x="${number(width * 0.64)}" y="${margin + 19}" font-family="Arial, sans-serif" font-size="2.7" letter-spacing=".65" fill="${ink}">${config.grid_style === "english" ? "DATE" : "日期"}</text>`);
         svg.push(line(width * 0.64 + 12, margin + 19.6, width - margin, margin + 19.6, `stroke="${rule}" stroke-width=".2"`));
       }
       for (let slot = 0; slot < rowsPerPage; slot++) {
@@ -143,9 +192,11 @@
         const clipId = `row-${pageIndex}-${slot}`;
         svg.push(`<defs><clipPath id="${clipId}"><rect x="${number(gridX)}" y="${number(y)}" width="${number(gridWidth)}" height="${rowHeight}"/></clipPath></defs>`);
         svg.push(`<g class="practice-row" data-row="${index}" data-x="${number(gridX)}" data-y="${number(y)}" data-width="${number(gridWidth)}" data-height="${rowHeight}" data-cell-width="${config.cell_width_mm}"><rect class="row-hit" x="${number(gridX)}" y="${number(y)}" width="${number(gridWidth)}" height="${rowHeight}" fill="transparent"/>`);
-        svg.push(line(gridX, top, gridX + gridWidth, top, `stroke="${rule}" stroke-width=".22"`));
-        svg.push(line(gridX, baseline, gridX + gridWidth, baseline, `stroke="${rule}" stroke-width=".3"`));
-        if (config.vertical_guides) {
+        if (config.grid_style === "english") {
+          svg.push(line(gridX, top, gridX + gridWidth, top, `stroke="${rule}" stroke-width=".22"`));
+          svg.push(line(gridX, baseline, gridX + gridWidth, baseline, `stroke="${rule}" stroke-width=".3"`));
+        }
+        if (config.vertical_guides && config.grid_style === "english") {
           for (let col = 0; col <= columns; col++) {
             const x = gridX + col * config.cell_width_mm;
             svg.push(line(x, y, x, y + rowHeight, `stroke="${rule}" stroke-width=".16" stroke-dasharray=".5 1.2" opacity=".65"`));
@@ -153,12 +204,19 @@
         }
         svg.push(`<g clip-path="url(#${clipId})" pointer-events="none">`);
         const row = config.rows[index];
-        if (row && row.style !== "blank") {
+        if (config.grid_style !== "english") {
+          const effectiveRow = row || createRow("", { font: "zhuyin", font_size_mm: 16, style: "blank" });
+          const chars = splitText(effectiveRow.text);
+          for (let col = 0; col < columns; col++) {
+            const generated = chars.length ? (effectiveRow.repeat ? chars[col % chars.length] : chars[col] || "") : "";
+            svg.push(drawChineseCell(config, effectiveRow, effectiveRow.cells[col] ?? generated, gridX + col * config.cell_width_mm, y, ink, rule, light));
+          }
+        } else if (row && row.style !== "blank") {
           if (row.placement === "flow") {
             const text = row.text ? Array(row.repeat_count).fill(row.text).join("   ") : "";
             svg.push(drawText(row, text, gridX + 1.8, baseline, gridWidth - 3.6, false, rowHeight, ink, light));
           } else {
-            const chars = Array.from(row.text);
+            const chars = splitText(row.text);
             for (let col = 0; col < columns; col++) {
               const generated = chars.length ? (row.repeat ? chars[col % chars.length] : chars[col] || "") : "";
               const text = row.cells[col] ?? generated;
@@ -174,5 +232,5 @@
     return { pages, width_mm: width, height_mm: height, rows_per_page: rowsPerPage, columns, warnings };
   }
 
-  return Object.freeze({ createRow, createWorksheet, normalizeWorksheet, renderWorksheet });
+  return Object.freeze({ createRow, createWorksheet, createChineseWorksheet, splitText, getReadingOptions, displayText, normalizeWorksheet, renderWorksheet });
 });

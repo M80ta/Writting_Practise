@@ -50,7 +50,9 @@ function setup(saved = null, options = {}) {
   w.getComputedStyle = () => ({ paddingLeft: "20", paddingRight: "20" });
   Object.defineProperty(w.document.querySelector("#paper-viewport"), "clientWidth", { value: 900 });
   if (options.storageBlocked) Object.defineProperty(w, "localStorage", { get() { throw new Error("storage blocked"); } });
-  if (saved) w.localStorage.setItem(storageKey, saved);
+  const currentStorageKey = new URL(options.url || base).searchParams.get("mode") === "chinese" ? "letter-lines.javascript.chinese.v1" : storageKey;
+  if (saved) w.localStorage.setItem(currentStorageKey, saved);
+  w.eval(fs.readFileSync(path.join(root, "zhuyin-data.js"), "utf8"));
   w.eval(fs.readFileSync(path.join(root, "worksheet.js"), "utf8"));
   w.eval(fs.readFileSync(path.join(root, "app.js"), "utf8"));
   const $ = (selector) => w.document.querySelector(selector);
@@ -60,7 +62,7 @@ function setup(saved = null, options = {}) {
     $(selector).dispatchEvent(new w.Event(event, { bubbles: true }));
   };
   const ready = () => $("#print-button").disabled === false && $$(".paper-page").length > 0;
-  const savedState = () => JSON.parse(w.localStorage.getItem(storageKey)).worksheet;
+  const savedState = () => JSON.parse(w.localStorage.getItem(currentStorageKey)).worksheet;
   return { dom, w, $, $$, input, ready, savedState };
 }
 
@@ -196,5 +198,55 @@ test("editing, exact counts, paper settings, print, local restore and JSON work 
   await waitFor(ready, "typing on blank row");
   assert.equal(savedState().rows[0].style, "dashed");
   assert.ok($("#paper-stack").textContent.includes("Aa"));
+  assert.deepEqual(errors, []);
+});
+
+test("Chinese entry edits polyphonic glyphs, preserves readings, and prints Chinese guides", async (t) => {
+  t.after(() => windows.splice(0).forEach((w) => w.close()));
+  const url = base + "index.html?mode=chinese";
+  const ui = setup(null, { url });
+  const { w, $, $$, input, ready, savedState } = ui;
+  await waitFor(ready, "Chinese preset");
+  assert.equal($("#grid-style").value, "tian");
+  assert.equal($("#row-font").value, "zhuyin");
+  assert.equal($$("#paper-stack .han-grid").length, 48);
+  assert.ok($("#row-placement option[value=flow]").disabled);
+  $("#paper-stack .practice-row").dispatchEvent(new w.MouseEvent("click", { bubbles: true, clientX: 26, clientY: 48 }));
+  $("#cell-text").value = "行";
+  $("#cell-text").dispatchEvent(new w.Event("input", { bubbles: true }));
+  assert.equal($("#cell-reading-panel").hidden, false);
+  assert.ok($$(".reading-option").length >= 4);
+  $(".reading-option[aria-label='讀音 2']").click();
+  const alternate = "行" + String.fromCodePoint(0xe01e1);
+  assert.equal($("#cell-text").value, alternate);
+  $("#cell-form").dispatchEvent(new w.Event("submit", { bubbles: true, cancelable: true }));
+  await waitFor(ready, "save selected reading");
+  assert.equal(savedState().rows[0].cells[0], alternate);
+  assert.ok($("#print-pages .practice-row").textContent.includes(alternate));
+  input("#row-font", "kai");
+  await waitFor(ready, "hide annotation without losing reading");
+  assert.equal(savedState().rows[0].cells[0], alternate);
+  assert.ok($("#paper-stack .practice-row").textContent.includes("行" + String.fromCodePoint(0xe01e0)));
+  input("#row-font", "zhuyin");
+  input("#grid-style", "mi");
+  input("#paper-size", "A5");
+  input("#orientation", "landscape");
+  await waitFor(ready, "Chinese landscape pagination");
+  assert.equal($$(".paper-page").length, 2);
+  const saved = w.localStorage.getItem("letter-lines.javascript.chinese.v1");
+  const restored = setup(saved, { url });
+  await waitFor(restored.ready, "restore Chinese project");
+  assert.equal(restored.savedState().rows[0].cells[0], alternate);
+  assert.equal(restored.$("#grid-style").value, "mi");
+  $("#print-button").click();
+  await waitFor(() => w.printCalls === 1, "Chinese print preparation");
+  const blocked = setup(null, { url, fontFailure: true });
+  await waitFor(() => blocked.$("#warning").textContent.includes("注音字型未載入"), "report missing annotation font");
+  assert.ok(blocked.$("#print-button").disabled);
+  blocked.w.document.dispatchEvent(new blocked.w.KeyboardEvent("keydown", { key: "p", ctrlKey: true, bubbles: true, cancelable: true }));
+  await sleep(30);
+  assert.ok(blocked.$("#print-button").disabled);
+  assert.equal(blocked.w.printCalls, 0);
+  assert.equal(blocked.$$("#print-pages .print-page").length, 0);
   assert.deepEqual(errors, []);
 });

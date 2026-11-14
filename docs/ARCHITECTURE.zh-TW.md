@@ -11,6 +11,8 @@ Git repository 根目錄是 `EnglishPractise/`。正式網站來源為 `javascri
 | `javascript/index.html` | Banner、範本、行列表、編輯器、紙張預覽與設定／格子／列印提示對話框 |
 | `javascript/app.css` | 桌面／手機版面、內附字型、紙張縮放及列印媒體樣式 |
 | `javascript/worksheet.js` | 無 DOM 的純函式模組；預設資料、嚴格驗證、舊格式轉換、紙張容量與 SVG 產生 |
+| `javascript/zhuyin-data.js` | 從原始字型 cmap 提取的字元覆蓋與多音字 IVS 對應，保留上游字型授權 |
+| `javascript/chinese.html` | 中文入口，轉至 `index.html?mode=chinese`，預設中文範本與獨立儲存 key |
 | `javascript/app.js` | 管理編排狀態與選取行、事件、延後排版、實際字寬量測、編排儲存及列印 |
 | `javascript/fonts/` | 內附字型與原始 OFL 授權 |
 | `javascript/legal.html` | 網站上的非商業與商用授權摘要 |
@@ -37,6 +39,10 @@ flowchart LR
 編排檔外層是 `{ "version": 1, "worksheet": { ... } }`。`worksheet` 包含紙張大小、方向、色彩、邊界、行數／格數、格寬／格高／行距、抬頭與 `rows`。
 
 每行包含 `text`、`font`、`style`、`font_size_mm`、`placement`、`repeat`、`repeat_count` 與 `cells`。`repeat_count` 是單字／句子總份數（1–100）；`repeat` 控制逐格循環填滿；`cells` 的 `null` 表示使用行文字，空字串表示刻意留白。文字、數值、枚舉、資料大小與未知欄位皆會驗證；文字插入 SVG 前會 XML 跳脫。
+
+`grid_style` 預設為 `english`，另可選 `tian`、`mi`、`square`。中文格型使用逐格排列，字型 `zhuyin` 與 `kai` 分別顯示附注音與無注音字形。漢字與 IVS 讀音標記以 grapheme 分組，不會拆成多個格子；原始讀音選擇儲存在文字／格子覆寫中。`kai` 只在繪製時使用 U+E01E0，不修改儲存的原讀音。
+
+中文字型依需要才載入，失敗時阻擋列印並清除舊列印副本。中文入口使用 `letter-lines.javascript.chinese.v1`；一般入口仍使用原 key。中文擴充編排只能由新版 JavaScript 載入，Rust 參考版不支援新增格型與字型欄位。
 
 容量以紙張 mm 計算：扣掉邊界、抬頭與頁尾後，依格高和行距求可用行數；以可用寬度除以格寬求格數。超額行自動分頁；末頁補足空白行。
 

@@ -10,7 +10,7 @@ const basePath = (process.env.BASE_PATH || "").replace(/\/$/, "");
 if (!Number.isInteger(port) || port < 1 || port > 65535 || (basePath && !/^\/[a-zA-Z0-9/_-]+$/.test(basePath))) {
   throw new Error("PORT must be 1–65535; BASE_PATH must be a URL path such as /EnglishPractise/javascript.");
 }
-const files = new Set(["/index.html", "/app.css", "/app.js", "/worksheet.js", "/legal.html", "/.nojekyll", "/LICENSE.md", "/LEGAL.md", "/NOTICE", "/THIRD_PARTY_NOTICES.md",
+const files = new Set(["/index.html", "/chinese.html", "/app.css", "/app.js", "/worksheet.js", "/zhuyin-data.js", "/legal.html", "/.nojekyll", "/LICENSE.md", "/LEGAL.md", "/NOTICE", "/THIRD_PARTY_NOTICES.md",
   ...fs.readdirSync(path.join(root, "fonts")).map((name) => `/fonts/${name}`)]);
 const mime = { ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".ttf": "font/ttf", ".txt": "text/plain; charset=utf-8", ".md": "text/plain; charset=utf-8", "": "text/plain; charset=utf-8" };
 const server = http.createServer((request, response) => {

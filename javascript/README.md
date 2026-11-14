@@ -1,6 +1,8 @@
-# Letter & Line｜純 JavaScript 英文練習紙
+# Letter & Line｜純 JavaScript 中英練習紙
 
-這一版使用 **HTML、CSS 與原生 JavaScript**，在瀏覽器內完成驗證、SVG 排版、預覽與列印。使用網頁不需安裝 Rust、Python、Node.js，也沒有 API 或後端服務。兩款手寫字型與完整授權文字隨專案附帶。
+這一版使用 **HTML、CSS 與原生 JavaScript**，在瀏覽器內完成驗證、SVG 排版、預覽與列印。使用網頁不需安裝 Rust、Python、Node.js，也沒有 API 或後端服務。英文字型、中文注音字型及完整授權文字均隨專案附帶。
+
+**中文注音版：直接開啟 [`chinese.html`](chinese.html)**，或在網頁選「中文注音」範本。支援田字格／米字格／方格、附注音標楷與純國字、逐格多音字選擇。完整操作與來源見 [中文注音使用說明](../docs/CHINESE.zh-TW.md)。
 
 本程式採 [PolyForm Noncommercial 1.0.0](LICENSE.md)，商用須事先確認並取得所需的書面授權。完整中文說明見 [LEGAL.md](LEGAL.md)，網站內也提供 `legal.html`。
 
@@ -19,12 +21,13 @@ node scripts/preview.cjs
 
 ## 功能
 
-- **雙線英文書寫格**：每行兩條水平線，可開關直向虛線分格。
+- **中英書寫格**：英文每行兩條水平線；中文可選田字格、米字格、方格，右側預留注音區。
 - **紙張設定**：A4／A5／Letter、直向／橫向、柔綠／黑白列印、頁面邊界、每頁行數、每行格數、格寬、格高和行距，尺寸以 mm 設定。
 - **逐行獨立編排**：文字、字型、字級與範字樣式可逐行設定，並支援新增、複製、刪除、上下移動，最多 200 行。
 - **逐格與單字／句子模式**：可點紙上格子輸入獨立字串，或在左側編輯整行文字。
 - **重複次數**：單字與句子每行可獨立設定 **1–100 次**，1 次只放一份範字；逐格字母可選擇自動重複填滿。
-- **五種字型**：內附 Patrick Hand、Caveat，另提供系統字型 Arial、Georgia 與 Courier New。
+- **七種字型選項**：Patrick Hand、Caveat、Arial、Georgia、Courier New，另有字嗨注音標楷與同字型的純國字異體。
+- **中文讀音選擇**：點選格子，在單一國字的讀音圖卡中選擇。國字與 IVS 讀音標記不會分成兩格；不自動推測整句多音字與變調。
 - **四種範字樣式**：虛線輪廓描字、實線、淡色與空白雙線。虛線為字形輪廓，不是單筆畫中心線。
 - **自動分頁與列印**：內容超過一頁時自動分頁，最後一頁補上空白書寫行。超過紙張可容納的行數或格數會自動限制並顯示提示；過長的單字／句子會縮合到行寬。
 - **儲存與載入**：同一瀏覽器自動儲存，可下載／載入 JSON 編排檔，包含相容的 Rust 版 v1 編排檔。舊版自動填滿會換算成固定重複次數。
@@ -32,6 +35,8 @@ node scripts/preview.cjs
 逐格文字超出每行格數時，超出的字元會保留在編排中並顯示提示，不會自動流到下一行。可增加格數、縮小格寬、手動新增行或改成單字／句子模式。
 
 儲存空間按網站來源區分。本機檔案、本機預覽、Rust 服務與 GitHub Pages 不會自動共用編排；移轉時請先下載 JSON，再於另一個網址載入。
+
+中文入口使用獨立儲存 key。含新增中文字型或格型的編排檔可在新版 JavaScript 版載入，舊 Rust 參考版不支援這些新增欄位。
 
 ## 列印與 PDF
 
@@ -66,7 +71,7 @@ npm ci
 npm test
 ```
 
-13 項測試涵蓋紙張尺寸與分頁、每行雙線、字型與樣式隔離、重複次數及下限、格子字串、XML 跳脫、非法輸入、舊編排相容、匯出／匯入、自動儲存還原、列印副本、字型／儲存失敗時的退回行為、GitHub Pages 子目錄與本機檔案的資源路徑，以及正式授權與根目錄副本的一致性。DOM 測試會阻擋所有 `fetch` 呼叫，確認不依賴後端。建置後可執行 `node scripts/verify-dist.cjs` 檢查 14 個發布檔案與官方授權 SHA-256。
+20 項測試涵蓋紙張尺寸與分頁、中英格型、字型與樣式隔離、重複次數、格子字串、IVS 多音字與純國字切換、XML 跳脫、非法輸入、舊編排相容、匯出／匯入、自動儲存還原、列印副本、中文字型失敗阻擋列印、資源路徑，以及字型和正式授權完整性。DOM 測試會阻擋所有 `fetch` 呼叫，確認不依賴後端。建置後可執行 `node scripts/verify-dist.cjs` 檢查 20 個發布檔案與官方授權 SHA-256。
 
 另已驗證靜態預覽在 `/EnglishPractise/javascript/` 下能正常提供 HTML、CSS、JavaScript 與兩款字型。瀏覽器預覽存取主機目前無法連線，因此實際畫面、瀏覽器列印預覽與實體列印仍待人工確認；DOM 模擬不代表視覺驗證。
 
@@ -75,9 +80,11 @@ npm test
 ```text
 javascript/
   index.html              繁體中文介面
+  chinese.html            中文注音版入口
   app.css                 外觀、手機版與列印樣式
   app.js                  編輯、儲存、字型量測與列印互動
   worksheet.js            輸入驗證、紙張排版與 SVG 產生
+  zhuyin-data.js          字型 cmap 的覆蓋範圍與多音字 IVS 對應
   legal.html              非商業使用與商業授權說明頁
   LICENSE.md / LEGAL.md    正式授權與中文說明
   NOTICE                  必要版權聲明
@@ -86,6 +93,7 @@ javascript/
   scripts/preview.cjs      可選的本機靜態檔案預覽
   scripts/build.cjs        可選的靜態檔案打包
   scripts/verify-dist.cjs  發布檔案與授權完整性檢查
+  scripts/generate-zhuyin-data.py  維護時重建 cmap metadata（選用 Python）
   tests/                  單元、DOM 與資源路徑測試
   package.json            測試指令與開發相依套件
   package-lock.json       固定開發相依版本
@@ -93,3 +101,5 @@ javascript/
 ```
 
 Patrick Hand 與 Caveat 來自 [Google Fonts 官方字型庫](https://github.com/google/fonts)，保留原始字型與各自完整的 SIL Open Font License。Arial、Georgia、Courier New 由使用者的系統提供，跨平台顯示可能略有不同。
+
+中文字型來自 [ButTaiwan/bpmfvs](https://github.com/ButTaiwan/bpmfvs)，保留漢字 CC BY 4.0、非漢字 SIL OFL 1.1、注音 IVS Apache 2.0 與其他上游署名。原始字型未修改，約 17.1 MB，依使用需要載入；詳細原文見 `fonts/LICENSE-ZihiKaiStd.txt`、`LICENSE-2.0.txt` 及 `BpmfZihiKaiStd-NOTICE.txt`。

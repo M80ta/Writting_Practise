@@ -25,4 +25,8 @@ test("HTML and CSS resolve every local asset under GitHub Pages subdirectories a
   assert.ok(fs.existsSync(path.join(root, ".nojekyll")));
   assert.ok(fs.existsSync(path.join(root, "fonts/PatrickHand-OFL.txt")));
   assert.ok(fs.existsSync(path.join(root, "fonts/Caveat-OFL.txt")));
+  assert.ok(html.indexOf('src="./zhuyin-data.js"') < html.indexOf('src="./worksheet.js"'));
+  assert.ok(html.indexOf('src="./worksheet.js"') < html.indexOf('src="./app.js"'));
+  const chineseEntry = fs.readFileSync(path.join(root, "chinese.html"), "utf8");
+  assert.ok(chineseEntry.includes('url=./index.html?mode=chinese'));
 });

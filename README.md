@@ -1,6 +1,6 @@
 # EnglishPractise · Letter & Line
 
-繁體中文的英文雙線練習紙工作室：逐行選字型、輸入字母／單字／句子，調整重複次數與格子尺寸，產生 A4 可列印練習紙。
+繁體中文介面的中英練習紙工作室：英文雙線、中文注音田字格／米字格／方格，逐行選字型、輸入內容、調整尺寸，產生 A4 可列印練習紙。
 
 - 網站預定網址：**https://m80ta.github.io/EnglishPractise/**（GitHub Pages 部署完成後生效）
 - 公開儲存庫：**https://github.com/M80ta/EnglishPractise**
@@ -8,7 +8,7 @@
 
 ## 開始使用
 
-開啟網站，或直接開啟 [`javascript/index.html`](javascript/index.html)。網站在瀏覽器內排版，不需要登入，也不需要安裝 Rust、Python 或 Node.js。
+開啟網站，或直接開啟 [`javascript/index.html`](javascript/index.html)。中文入口為 [`javascript/chinese.html`](javascript/chinese.html)。網站在瀏覽器內排版，不需要登入，也不需要安裝 Rust、Python 或 Node.js。
 
 1. 選擇「字母練習」「單字與句子」或「空白練習紙」。
 2. 左側選一行，設定文字、字型、字級與虛線／實線／淡字／空白樣式。
@@ -41,6 +41,7 @@ npm run build
 | 文件 | 內容 |
 | --- | --- |
 | [使用說明](docs/USAGE.zh-TW.md) | 範本、逐行與逐格編輯、字型、重複次數、列印、儲存與載入 |
+| [中文注音使用說明](docs/CHINESE.zh-TW.md) | 中文格型、附注音／純國字字型、逐格多音字選擇與字型來源 |
 | [Git 與部署說明](docs/GIT_AND_DEPLOYMENT.zh-TW.md) | 初始化、帳號與 SSH、提交／推送、GitHub Pages、更新與回復 |
 | [架構說明](docs/ARCHITECTURE.zh-TW.md) | JavaScript 排版引擎、資料流程、設定模型、測試、Rust 參考版 |
 | [非商業與商用授權說明](LEGAL.md) | 允許範圍、商用申請、第三方素材與法律聲明 |
@@ -71,4 +72,4 @@ EnglishPractise/
 
 **原始碼公開不代表允許商業使用。** 使用、修改及散布需遵守 [LICENSE.md](LICENSE.md)，並保留 [NOTICE](NOTICE)。商業授權需求請透過 [專案 Issues](https://github.com/M80ta/EnglishPractise/issues) 聯絡權利人 M80ta，事先取得書面授權或另行簽訂商用授權合約；提出申請不代表已獲授權。
 
-兩款內附字型依各自 SIL Open Font License 授權，權利與本專案程式的非商業授權分開判斷。
+內附字型依各自原始條款授權，權利與程式的非商業授權分開判斷。中文注音字型保留上游的 CC BY 4.0、SIL OFL、Apache 2.0 與相關署名聲明；詳見第三方授權文件。

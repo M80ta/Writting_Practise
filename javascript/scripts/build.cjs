@@ -5,7 +5,7 @@ const path = require("node:path");
 const root = path.resolve(__dirname, "..");
 const output = path.join(root, "dist");
 fs.mkdirSync(output, { recursive: true });
-for (const file of ["index.html", "app.css", "app.js", "worksheet.js", "legal.html", ".nojekyll", "LICENSE.md", "LEGAL.md", "NOTICE", "THIRD_PARTY_NOTICES.md"]) {
+for (const file of ["index.html", "chinese.html", "app.css", "app.js", "worksheet.js", "zhuyin-data.js", "legal.html", ".nojekyll", "LICENSE.md", "LEGAL.md", "NOTICE", "THIRD_PARTY_NOTICES.md"]) {
   fs.copyFileSync(path.join(root, file), path.join(output, file));
 }
 fs.cpSync(path.join(root, "fonts"), path.join(output, "fonts"), { recursive: true });

@@ -5,10 +5,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f7f6f2">
-  <meta name="description" content="製作屬於你的兩線英文練習紙。自由編輯每一行、挑選手寫字型，產生 A4 可列印的虛線描字與英文書寫練習紙。">
-  <title>Letter & Line｜英文練習紙工作室</title>
+  <meta name="description" content="製作英文雙線與中文注音練習紙。自由選字型、田字格與米字格，調整讀音與範字，產生 A4 可列印練習紙。">
+  <title>Letter & Line｜中英練習紙工作室</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%23b85e3c'/%3E%3Ctext x='8' y='29' fill='white' font-size='28' font-family='Georgia'%3EL%3C/text%3E%3C/svg%3E">
   <link rel="stylesheet" href="./app.css">
+  <script src="./zhuyin-data.js" defer></script>
   <script src="./worksheet.js" defer></script>
   <script src="./app.js" defer></script>
 </head>
@@ -32,7 +33,7 @@
   <header class="banner">
     <a class="brand" href="./index.html" aria-label="Letter and Line 首頁">
       <span class="brand-mark"><svg class="icon"><use href="#i-book"/></svg></span>
-      <span><strong>Letter <em>&</em> Line<span class="brand-dot">.</span></strong><small>英文練習紙工作室</small></span>
+      <span><strong>Letter <em>&</em> Line<span class="brand-dot">.</span></strong><small>中英練習紙工作室</small></span>
     </a>
     <div class="banner-actions">
       <span class="local-status"><span></span>在你的裝置，安心編輯</span>
@@ -43,12 +44,12 @@
 
   <main class="app-shell">
     <section class="intro" aria-labelledby="page-title">
-      <div><p class="eyebrow"><span></span> A LITTLE PRACTICE, EVERY DAY</p><h1 id="page-title">一張紙，練好每一筆<span>。</span></h1><p class="intro-copy">挑選字型、寫下想練的文字，把專屬英文練習紙帶到書桌上。</p></div>
+      <div><p class="eyebrow"><span></span> A LITTLE PRACTICE, EVERY DAY</p><h1 id="page-title">一張紙，練好每一筆<span>。</span></h1><p class="intro-copy">挑選字型、寫下想練的文字，把專屬中英練習紙帶到書桌上。</p></div>
       <div class="intro-note"><span class="note-script">Make it your own.</span><svg viewBox="0 0 100 34" aria-hidden="true"><path d="M4 8c32-9 71-5 78 12M71 18l13 5 5-13"/></svg><small>從這裡，開始今天的練習</small></div>
     </section>
 
     <div class="workspace-heading">
-      <div class="presets" role="group" aria-label="套用練習範本"><button class="preset active" data-template="alphabet" type="button"><span>Aa</span>字母練習</button><button class="preset" data-template="words" type="button"><svg class="icon"><use href="#i-pen"/></svg>單字與句子</button><button class="preset" data-template="blank" type="button"><span class="blank-icon">▤</span>空白練習紙</button></div>
+      <div class="presets" role="group" aria-label="套用練習範本"><button class="preset active" data-template="alphabet" type="button"><span>Aa</span>字母練習</button><button class="preset" data-template="words" type="button"><svg class="icon"><use href="#i-pen"/></svg>單字與句子</button><button class="preset" data-template="chinese" type="button"><span>字</span>中文注音</button><button class="preset" data-template="blank" type="button"><span class="blank-icon">▤</span>空白練習紙</button></div>
       <span class="save-status" id="save-status" role="status"><svg class="icon"><use href="#i-check"/></svg>自動儲存在此瀏覽器</span>
     </div>
 
@@ -60,16 +61,16 @@
         <section class="row-editor" aria-labelledby="editing-title">
           <div class="section-label"><h3 id="editing-title">第 01 行設定</h3><div class="row-actions"><button class="icon-button" id="move-up" title="上移這一行" aria-label="上移這一行" type="button"><svg class="icon"><use href="#i-up"/></svg></button><button class="icon-button" id="move-down" title="下移這一行" aria-label="下移這一行" type="button"><svg class="icon rotate"><use href="#i-up"/></svg></button><button class="icon-button" id="duplicate-row" title="複製這一行" aria-label="複製這一行" type="button"><svg class="icon"><use href="#i-copy"/></svg></button><button class="icon-button danger" id="delete-row" title="刪除這一行" aria-label="刪除這一行" type="button"><svg class="icon"><use href="#i-trash"/></svg></button></div></div>
           <label class="field-label" for="row-text">練習文字 <small id="text-length">0 / 500</small></label>
-          <textarea id="row-text" rows="2" maxlength="500" spellcheck="false" placeholder="輸入字母、單字或一句喜歡的話…"></textarea>
+          <textarea id="row-text" rows="2" maxlength="500" spellcheck="false" placeholder="輸入國字、字母或一句喜歡的話…"></textarea>
           <div class="field-row"><label>排列方式<select id="row-placement"><option value="cells">逐格字母</option><option value="flow">單字／句子</option></select></label><label>字級 <span class="unit">mm</span><input id="row-font-size" type="number" min="4" max="22" step="0.5" value="10.5"></label></div>
-          <label class="field-label" for="row-font">參考字型 <span class="small-tag">5 種字型</span></label>
-          <select id="row-font"><option value="hand">Patrick Hand · 自然手寫</option><option value="cursive">Caveat · 流暢手寫</option><option value="sans">Arial · 清楚印刷</option><option value="serif">Georgia · 經典襯線</option><option value="mono">Courier New · 等寬字體</option></select>
+          <label class="field-label" for="row-font">參考字型 <span class="small-tag">7 種字型</span></label>
+          <select id="row-font"><option value="hand">Patrick Hand · 自然手寫</option><option value="cursive">Caveat · 流暢手寫</option><option value="sans">Arial · 清楚印刷</option><option value="serif">Georgia · 經典襯線</option><option value="mono">Courier New · 等寬字體</option><option value="zhuyin">字嗨注音標楷 · 附注音</option><option value="kai">字嗨標楷 · 純國字</option></select>
           <div class="font-specimen" id="font-specimen">The quick brown fox.</div>
           <span class="field-label">範字樣式</span>
           <div class="style-picker" role="group" aria-label="範字樣式"><button type="button" data-style="dashed"><span class="sample-dashed">Aa</span>虛線</button><button type="button" data-style="solid"><span>Aa</span>實線</button><button type="button" data-style="light"><span class="sample-light">Aa</span>淡字</button><button type="button" data-style="blank"><span class="sample-blank">—</span>空白</button></div>
           <label class="check-label" id="cell-repeat-control"><input id="row-repeat" type="checkbox"><span>重複範字，填滿這一行</span></label>
           <div id="flow-repeat-control" class="field-row" hidden><label for="row-repeat-count">重複次數 <span class="unit">次</span><input id="row-repeat-count" type="number" min="1" max="100" step="1" value="1" required aria-describedby="repeat-count-help"><span id="repeat-count-help" class="field-help">1 次只顯示一份範字；較長內容會縮合至行寬。</span></label></div>
-          <p class="field-help">虛線為字形輪廓描字；空白樣式保留雙線，方便自由練習。</p>
+          <p class="field-help">虛線為字形輪廓描字；空白樣式保留書寫格，方便自由練習。</p><p class="field-help chinese-note" id="chinese-note" hidden>中文注音使用字型預設讀音。點紙上的單格可改選多音字；中文格型使用逐格排列。中文範字須等注音字型載入完成後列印。</p>
         </section>
         <div class="file-actions"><button id="export-project" type="button"><svg class="icon"><use href="#i-download"/></svg>儲存編排</button><button id="import-project" type="button">載入編排<svg class="icon"><use href="#i-arrow"/></svg></button><input id="import-file" type="file" accept=".json,application/json" hidden></div>
       </aside>
@@ -81,18 +82,18 @@
         <div class="preview-footer"><span><svg class="icon"><use href="#i-pen"/></svg>點選紙上的一行或格子，就能直接編輯</span><button id="help-button" type="button"><svg class="icon"><use href="#i-help"/></svg>列印小提示</button></div>
       </section>
     </div>
-    <footer class="app-footer"><span>LETTER & LINE <span class="footer-separator">/</span> 用一點練習，寫出自己的節奏。</span><span>兩線書寫格 <span class="footer-separator">·</span> 即時預覽</span><a class="legal-link" href="./legal.html">非商業使用 · 商用需授權</a></footer>
+    <footer class="app-footer"><span>LETTER & LINE <span class="footer-separator">/</span> 用一點練習，寫出自己的節奏。</span><a class="legal-link" href="./chinese.html">開啟中文注音版</a><span>兩線書寫格 <span class="footer-separator">·</span> 即時預覽</span><a class="legal-link" href="./legal.html">非商業使用 · 商用需授權</a></footer>
   </main>
 
   <dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-title"><form method="dialog" class="dialog-heading"><div><p class="eyebrow">MAKE ROOM FOR PRACTICE</p><h2 id="settings-title">紙張設定</h2></div><button class="icon-button" aria-label="關閉紙張設定"><svg class="icon"><use href="#i-close"/></svg></button></form><div class="settings-content">
     <section><h3><span>01</span> 紙張與列印</h3><div class="field-row"><label>紙張大小<select id="paper-size" data-setting="paper_size"><option value="A4">A4 · 210 × 297 mm</option><option value="A5">A5 · 148 × 210 mm</option><option value="Letter">Letter · 216 × 279 mm</option></select></label></div><div class="field-row"><label>列印方向<select id="orientation" data-setting="orientation"><option value="portrait">直向 Portrait</option><option value="landscape">橫向 Landscape</option></select></label><label>列印色彩<select id="print-mode" data-setting="print_mode"><option value="color">柔綠雙線</option><option value="grayscale">黑白省墨</option></select></label></div><label class="field-label" for="margin">頁面邊界 <span class="unit">mm</span></label><input id="margin" data-setting="margin_mm" type="number" min="8" max="30" step="1"></section>
-    <section><h3><span>02</span> 書寫格配置</h3><div class="field-row"><label>每頁行數<input id="rows-per-page" data-setting="rows_per_page" type="number" min="1" max="30" step="1"></label><label>每行格數<input id="columns" data-setting="columns" type="number" min="1" max="40" step="1"></label></div><div class="field-row"><label>格子寬度 <span class="unit">mm</span><input id="cell-width" data-setting="cell_width_mm" type="number" min="8" max="35" step="0.5"></label><label>格子高度 <span class="unit">mm</span><input id="cell-height" data-setting="cell_height_mm" type="number" min="10" max="30" step="0.5"></label></div><label class="field-label" for="row-gap">行與行間距 <span class="unit">mm</span></label><input id="row-gap" data-setting="row_gap_mm" type="number" min="2" max="12" step="0.5"><label class="check-label"><input id="vertical-guides" data-setting="vertical_guides" type="checkbox"><span>顯示直向分格輔助線</span></label><p class="field-help">每行固定兩條水平書寫線。超出紙張的行數與格數會自動調整，預覽會顯示實際配置。</p></section>
+    <section><h3><span>02</span> 書寫格配置</h3><label class="field-label" for="grid-style">書寫格型</label><select id="grid-style" data-setting="grid_style"><option value="english">英文雙線</option><option value="tian">中文田字格</option><option value="mi">中文米字格</option><option value="square">中文方格</option></select><div class="field-row"><label>每頁行數<input id="rows-per-page" data-setting="rows_per_page" type="number" min="1" max="30" step="1"></label><label>每行格數<input id="columns" data-setting="columns" type="number" min="1" max="40" step="1"></label></div><div class="field-row"><label>格子寬度 <span class="unit">mm</span><input id="cell-width" data-setting="cell_width_mm" type="number" min="8" max="35" step="0.5"></label><label>格子高度 <span class="unit">mm</span><input id="cell-height" data-setting="cell_height_mm" type="number" min="10" max="30" step="0.5"></label></div><label class="field-label" for="row-gap">行與行間距 <span class="unit">mm</span></label><input id="row-gap" data-setting="row_gap_mm" type="number" min="2" max="12" step="0.5"><label class="check-label"><input id="vertical-guides" data-setting="vertical_guides" type="checkbox"><span>顯示直向分格輔助線</span></label><p class="field-help" id="grid-help">每行固定兩條水平書寫線。超出紙張的行數與格數會自動調整，預覽會顯示實際配置。</p></section>
     <section><h3><span>03</span> 紙張抬頭</h3><label class="check-label"><input id="show-header" data-setting="show_header" type="checkbox"><span>顯示標題、姓名與日期欄</span></label><label class="field-label" for="worksheet-title">紙張標題</label><input id="worksheet-title" data-setting="title" type="text" maxlength="80" placeholder="A little practice, every day."></section>
   </div><div class="dialog-footer"><p id="actual-layout">變更會即時套用到紙張</p><button class="button primary" id="settings-done" type="button">完成設定<svg class="icon"><use href="#i-check"/></svg></button></div></dialog>
 
-  <dialog id="cell-dialog" class="cell-dialog" aria-labelledby="cell-title"><form id="cell-form"><div class="dialog-heading"><h2 id="cell-title">編輯格子</h2><button class="icon-button" type="button" id="cell-close" aria-label="關閉格子編輯"><svg class="icon"><use href="#i-close"/></svg></button></div><label class="field-label" for="cell-text">這一格的文字</label><input id="cell-text" maxlength="80" type="text" spellcheck="false" autocomplete="off"><p class="field-help">可以輸入字母或字串，較長文字會縮合到格內。空白可留作手寫練習。</p><div class="cell-actions"><button class="button" id="cell-reset" type="button">還原這一格</button><button class="button primary" type="submit">套用文字<svg class="icon"><use href="#i-check"/></svg></button></div></form></dialog>
+  <dialog id="cell-dialog" class="cell-dialog" aria-labelledby="cell-title"><form id="cell-form"><div class="dialog-heading"><h2 id="cell-title">編輯格子</h2><button class="icon-button" type="button" id="cell-close" aria-label="關閉格子編輯"><svg class="icon"><use href="#i-close"/></svg></button></div><label class="field-label" for="cell-text">這一格的文字</label><input id="cell-text" maxlength="80" type="text" spellcheck="false" autocomplete="off"><p class="field-help">可以輸入字母或字串，較長文字會縮合到格內。空白可留作手寫練習。</p><section id="cell-reading-panel" hidden><p class="field-label">選擇注音讀音</p><div class="reading-options" id="reading-options" role="group" aria-label="國字讀音選擇"></div><p class="field-help" id="reading-help"></p></section><div class="cell-actions"><button class="button" id="cell-reset" type="button">還原這一格</button><button class="button primary" type="submit">套用文字<svg class="icon"><use href="#i-check"/></svg></button></div></form></dialog>
 
-  <dialog id="help-dialog" class="help-dialog" aria-labelledby="help-title"><form method="dialog"><div class="dialog-heading"><h2 id="help-title">把練習帶到紙上</h2><button class="icon-button" aria-label="關閉列印提示"><svg class="icon"><use href="#i-close"/></svg></button></div><ol><li><strong>核對紙張與方向</strong><p>在列印視窗選擇與右上角設定一致的紙張大小和直向／橫向。</p></li><li><strong>以 100% 實際大小列印</strong><p>關閉瀏覽器頁首及頁尾，邊界選「無」。檔案本身已保留安全邊界。</p></li><li><strong>想保留 PDF？</strong><p>將印表機改成「另存為 PDF」。每張練習紙會保留獨立分頁。</p></li></ol><p class="help-note">兩款手寫字型隨程式提供。預覽與列印都不需要連線下載字型。</p><button class="button primary help-done">知道了，開始練習<svg class="icon"><use href="#i-check"/></svg></button></form></dialog>
+  <dialog id="help-dialog" class="help-dialog" aria-labelledby="help-title"><form method="dialog"><div class="dialog-heading"><h2 id="help-title">把練習帶到紙上</h2><button class="icon-button" aria-label="關閉列印提示"><svg class="icon"><use href="#i-close"/></svg></button></div><ol><li><strong>核對紙張與方向</strong><p>在列印視窗選擇與右上角設定一致的紙張大小和直向／橫向。</p></li><li><strong>以 100% 實際大小列印</strong><p>關閉瀏覽器頁首及頁尾，邊界選「無」。檔案本身已保留安全邊界。</p></li><li><strong>想保留 PDF？</strong><p>將印表機改成「另存為 PDF」。每張練習紙會保留獨立分頁。</p></li></ol><p class="help-note">英文手寫與中文字型均隨網頁提供。中文注音字型較大，首次開啟請等字型載入完成再列印。</p><button class="button primary help-done">知道了，開始練習<svg class="icon"><use href="#i-check"/></svg></button></form></dialog>
   <div id="toast" class="toast" role="status" hidden></div>
   <div id="print-pages" aria-hidden="true"></div>
 </body>

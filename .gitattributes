@@ -6,3 +6,5 @@
 
 # Keep upstream font license text byte-for-byte, including original spacing.
 **/fonts/*-OFL.txt -whitespace
+**/fonts/LICENSE-*.txt -text -whitespace
+**/fonts/*-NOTICE.txt -text -whitespace

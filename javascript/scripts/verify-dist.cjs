@@ -6,7 +6,7 @@ const path = require("node:path");
 const crypto = require("node:crypto");
 const root = path.resolve(__dirname, "..");
 const output = path.join(root, "dist");
-const expected = ["index.html", "app.css", "app.js", "worksheet.js", "legal.html", ".nojekyll", "LICENSE.md", "LEGAL.md", "NOTICE", "THIRD_PARTY_NOTICES.md", ...fs.readdirSync(path.join(root, "fonts")).map((file) => `fonts/${file}`)];
+const expected = ["index.html", "chinese.html", "app.css", "app.js", "worksheet.js", "zhuyin-data.js", "legal.html", ".nojekyll", "LICENSE.md", "LEGAL.md", "NOTICE", "THIRD_PARTY_NOTICES.md", ...fs.readdirSync(path.join(root, "fonts")).map((file) => `fonts/${file}`)];
 for (const file of expected) {
   assert.deepEqual(fs.readFileSync(path.join(output, file)), fs.readFileSync(path.join(root, file)), `Published asset differs: ${file}`);
 }
