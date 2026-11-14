@@ -1,0 +1,14 @@
+{
+  "name": "letter-lines-javascript",
+  "version": "1.0.0",
+  "private": true,
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "description": "Browser-only printable English handwriting worksheet studio",
+  "scripts": {
+    "test": "node --test",
+    "build": "node scripts/build.cjs",
+    "preview": "node scripts/preview.cjs"
+  },
+  "engines": { "node": ">=18" },
+  "devDependencies": { "jsdom": "24.1.3" }
+}

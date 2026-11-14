@@ -1,0 +1,789 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 -->
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f4ef">
+  <title>英文練習紙｜Letter Lines</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #263a36;
+      --muted: #78827c;
+      --green: #37665a;
+      --green-dark: #294d44;
+      --paper: #fffefa;
+      --canvas: #f3f1ec;
+      --rule: #a7c7bd;
+      --rule-mid: #c1d5ce;
+      --accent: #dcebe3;
+      --shadow: 0 16px 40px rgb(52 61 54 / 10%), 0 2px 6px rgb(52 61 54 / 5%);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background: var(--canvas);
+      color: var(--ink);
+      font-family: "Segoe UI", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+    }
+
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+
+    .topbar {
+      min-height: 82px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 14px clamp(18px, 4vw, 58px);
+      background: var(--paper);
+      border-bottom: 1px solid #e8e7df;
+      position: relative;
+      z-index: 3;
+    }
+
+    .brand { display: flex; align-items: center; gap: 13px; }
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: var(--accent);
+      color: var(--green);
+      font: 700 20px Georgia, serif;
+    }
+    .brand h1 { margin: 0; font-size: 17px; letter-spacing: .04em; }
+    .brand p { margin: 4px 0 0; color: var(--muted); font-size: 11px; letter-spacing: .08em; }
+    .top-actions { display: flex; gap: 10px; align-items: center; }
+
+    .button {
+      min-height: 40px;
+      padding: 0 15px;
+      border: 1px solid #dfe4de;
+      border-radius: 10px;
+      background: white;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 600;
+      transition: background .16s ease, border-color .16s ease, transform .16s ease;
+    }
+    .button:hover { border-color: #b7c9bf; background: #f8faf7; }
+    .button:active { transform: translateY(1px); }
+    .button-primary { border-color: var(--green); background: var(--green); color: white; }
+    .button-primary:hover { border-color: var(--green-dark); background: var(--green-dark); }
+    .button-icon { margin-right: 7px; font-size: 15px; }
+
+    .settings-panel {
+      position: absolute;
+      right: clamp(18px, 4vw, 58px);
+      top: calc(100% - 1px);
+      width: min(390px, calc(100vw - 32px));
+      padding: 20px;
+      background: white;
+      border: 1px solid #e7e9e3;
+      border-radius: 0 0 14px 14px;
+      box-shadow: var(--shadow);
+    }
+    .settings-panel[hidden] { display: none; }
+    .settings-title { margin: 0 0 15px; font-size: 14px; }
+    .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 12px; }
+    .field { display: grid; gap: 6px; min-width: 0; }
+    .field label, .field-label { color: #64716a; font-size: 11px; font-weight: 650; }
+    .field input, .field select, .row-controls select, .row-text {
+      width: 100%;
+      min-height: 38px;
+      padding: 0 10px;
+      border: 1px solid #e1e5de;
+      border-radius: 8px;
+      outline: none;
+      background: #fff;
+      color: var(--ink);
+      font-size: 12px;
+    }
+    .field input:focus, .field select:focus, .row-controls select:focus, .row-text:focus {
+      border-color: #7da595;
+      box-shadow: 0 0 0 3px rgb(91 139 118 / 12%);
+    }
+    .setting-note { grid-column: 1 / -1; margin: -4px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .checkbox-field { display: flex; align-items: center; gap: 8px; min-height: 38px; color: #64716a; font-size: 11px; font-weight: 650; }
+    .checkbox-field input { width: 15px; height: 15px; accent-color: var(--green); }
+
+    main {
+      width: min(1440px, 100%);
+      margin: 0 auto;
+      padding: 28px clamp(16px, 3.5vw, 48px) 48px;
+    }
+    .intro {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .intro h2 { margin: 0; font-size: clamp(20px, 2.4vw, 27px); letter-spacing: -.025em; }
+    .intro p { margin: 7px 0 0; color: var(--muted); font-size: 13px; }
+    .page-count { flex: 0 0 auto; color: #68756e; font-size: 12px; }
+    .worksheet-modes { display: flex; gap: 5px; margin-top: 13px; }
+    .mode-button {
+      padding: 7px 11px;
+      border: 1px solid #dfe4de;
+      border-radius: 8px;
+      background: #fff;
+      color: #66736b;
+      font-size: 11px;
+      font-weight: 650;
+    }
+    .mode-button[aria-pressed="true"] { border-color: #9ebcaf; background: #e8f1eb; color: var(--green-dark); }
+    .mode-note {
+      padding: 20px;
+      border: 1px solid #e6e7e1;
+      border-radius: 14px;
+      background: #fff;
+      color: #66736b;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+    .mode-note strong { display: block; margin-bottom: 5px; color: var(--ink); }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(290px, 380px) minmax(0, 1fr);
+      gap: 22px;
+      align-items: start;
+    }
+    .editor {
+      overflow: hidden;
+      border: 1px solid #e6e7e1;
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 4px 16px rgb(48 59 51 / 4%);
+    }
+    .editor-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 17px 18px 13px;
+      border-bottom: 1px solid #efefe9;
+    }
+    .editor-head h3 { margin: 0; font-size: 14px; }
+    .editor-head span { color: var(--muted); font-size: 11px; }
+    .row-list { display: grid; gap: 10px; padding: 14px; max-height: min(70vh, 760px); overflow: auto; }
+    .alphabet-editor-list { display: grid; gap: 8px; padding: 14px; max-height: min(70vh, 760px); overflow: auto; }
+    .row-card {
+      padding: 11px;
+      border: 1px solid #ebede7;
+      border-radius: 10px;
+      background: #fdfdfa;
+    }
+    .row-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .row-number { color: #718078; font-size: 11px; font-weight: 700; }
+    .alphabet-edit-card { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: center; padding: 9px; border: 1px solid #ebede7; border-radius: 9px; background: #fdfdfa; }
+    .alphabet-edit-label { color: #718078; font-size: 10px; font-weight: 700; }
+    .alphabet-edit-card input { width: 100%; min-width: 0; min-height: 34px; padding: 0 8px; border: 1px solid #e1e5de; border-radius: 7px; color: var(--ink); font-size: 12px; }
+    .remove-row {
+      width: 24px;
+      height: 24px;
+      padding: 0;
+      border: 0;
+      border-radius: 7px;
+      background: transparent;
+      color: #9a6b63;
+      font-size: 17px;
+      line-height: 1;
+    }
+    .remove-row:hover { background: #f8eae6; }
+    .row-text { min-height: 36px; margin-bottom: 8px; }
+    .row-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .row-controls select { min-height: 33px; padding-inline: 8px; font-size: 11px; }
+    .editor-foot { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 14px 14px; }
+    .editor-foot .button { min-height: 36px; padding-inline: 9px; font-size: 11px; }
+
+    .preview-wrap { min-width: 0; }
+    .preview-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin: 0 2px 13px;
+      color: #69756e;
+      font-size: 11px;
+    }
+    .preview-toolbar strong { color: #53645a; font-size: 12px; }
+    .paper-stack { display: grid; justify-items: center; gap: 24px; }
+    .paper {
+      --paper-width: 210mm;
+      --paper-height: 297mm;
+      --paper-inset-x: 14mm;
+      --paper-inset-y: 13mm;
+      --row-height: 18mm;
+      position: relative;
+      width: min(100%, 790px);
+      aspect-ratio: var(--paper-ratio, 210 / 297);
+      padding: 4.38% 6.67%;
+      overflow: hidden;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+    .paper.landscape { width: min(100%, 980px); }
+    .paper-inner { width: 100%; height: 100%; display: flex; flex-direction: column; }
+    .paper-header {
+      height: 8%;
+      min-height: 30px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      color: #91a096;
+      font-size: clamp(8px, .75vw, 10px);
+      letter-spacing: .03em;
+    }
+    .student-line { display: inline-block; width: clamp(70px, 12vw, 125px); margin-left: 5px; border-bottom: 1px solid #dce3db; }
+    .practice-rows {
+      flex: 1 1 0;
+      display: grid;
+      min-height: 0;
+      border-right: 1px solid var(--rule);
+      border-left: 1px solid var(--rule);
+    }
+    .practice-row {
+      position: relative;
+      min-height: 0;
+      border-top: 1px solid var(--rule);
+    }
+    .practice-row:last-of-type { border-bottom: 1px solid var(--rule); }
+    .practice-row::before,
+    .practice-row::after {
+      position: absolute;
+      right: 0;
+      left: 0;
+      border-top: 1px dashed var(--rule-mid);
+      content: "";
+    }
+    .practice-row::before { top: 33.333%; }
+    .practice-row::after { top: 66.666%; }
+    .practice-text {
+      position: absolute;
+      bottom: -.15em;
+      left: 5px;
+      max-width: calc(100% - 10px);
+      overflow: hidden;
+      color: #728b7d;
+      font-size: calc(var(--row-height) * .68);
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .practice-text.style-dashed {
+      color: transparent;
+      -webkit-text-stroke: 1px #8ba698;
+      paint-order: stroke fill;
+      -webkit-text-fill-color: transparent;
+      stroke-dasharray: 1.5 2.8;
+    }
+    .practice-text.style-light { opacity: .3; }
+    .alphabet-header { flex: 0 0 9%; text-align: center; }
+    .alphabet-title {
+      margin: 0 0 9px;
+      color: #456b92;
+      font: 700 clamp(18px, 2.2vw, 25px) Georgia, "Noto Serif TC", serif;
+      letter-spacing: .12em;
+    }
+    .alphabet-meta {
+      display: flex;
+      justify-content: center;
+      gap: clamp(10px, 2vw, 25px);
+      color: #52657c;
+      font-size: clamp(8px, .75vw, 10px);
+    }
+    .alphabet-meta-item { white-space: nowrap; }
+    .alphabet-meta-line { display: inline-block; width: clamp(42px, 7vw, 78px); margin-left: 4px; border-bottom: 1px solid #8798a9; }
+    .alphabet-grid {
+      flex: 1 1 0;
+      display: grid;
+      min-height: 0;
+    }
+    .alphabet-row { min-height: 0; display: grid; grid-template-columns: 12mm minmax(0, 1fr) 12mm minmax(0, 1fr); }
+    .alphabet-label {
+      min-width: 0;
+      display: grid;
+      place-items: center;
+      border: 1px solid #91adc0;
+      background: #dcecf4;
+      color: #334e65;
+      font: italic 700 calc(var(--row-height) * .52) Georgia, "Times New Roman", serif;
+      overflow: hidden;
+    }
+    .alphabet-practice {
+      position: relative;
+      min-width: 0;
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+    }
+    .alphabet-practice::before,
+    .alphabet-practice::after {
+      position: absolute;
+      right: 0;
+      left: 0;
+      border-top: 1px dashed var(--rule-mid);
+      content: "";
+    }
+    .alphabet-practice::before { top: 33.333%; }
+    .alphabet-practice::after { top: 66.666%; }
+    .alphabet-examples {
+      position: absolute;
+      inset: 0;
+      bottom: -.2em;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-around;
+      overflow: hidden;
+      padding: 0 2px 0;
+      color: #9ab7d2;
+      font: italic calc(var(--row-height) * .95)/1 Georgia, "Times New Roman", serif;
+      white-space: nowrap;
+    }
+    .alphabet-examples span { overflow: hidden; }
+    .alphabet-examples span + span { margin-left: 8px; }
+    .alphabet-examples.hidden { visibility: hidden; }
+    .alphabet-page-footer { flex: 0 0 3%; display: flex; align-items: end; justify-content: flex-end; color: #a4ada5; font-size: 8px; }
+    .paper-footer {
+      height: 3%;
+      min-height: 10px;
+      display: flex;
+      align-items: end;
+      justify-content: flex-end;
+      color: #a4ada5;
+      font-size: 8px;
+    }
+    .empty-note {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 80%;
+      color: #a3ada4;
+      font-size: 12px;
+      text-align: center;
+      transform: translate(-50%, -50%);
+    }
+
+    @media (max-width: 850px) {
+      .workspace { grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); gap: 14px; }
+      .paper { width: 100%; }
+      .paper.landscape { width: 100%; }
+    }
+    @media (max-width: 680px) {
+      .topbar { min-height: 70px; padding-inline: 15px; }
+      .brand-mark { width: 37px; height: 37px; }
+      .brand h1 { font-size: 15px; }
+      .brand p { font-size: 9px; }
+      .button { min-height: 37px; padding-inline: 10px; font-size: 11px; }
+      .button-icon { margin-right: 4px; }
+      main { padding-top: 22px; }
+      .intro { align-items: start; }
+      .intro p { max-width: 280px; line-height: 1.6; }
+      .workspace { grid-template-columns: 1fr; }
+      .editor { order: 2; }
+      .preview-wrap { order: 1; }
+      .row-list { max-height: 440px; }
+      .paper-stack { gap: 15px; }
+      .paper { width: min(100%, 480px); }
+      .paper.landscape { width: 100%; }
+      .paper-header { font-size: 7px; }
+    }
+    @media print {
+      @page { size: A4 portrait; margin: 0; }
+      body { background: white; }
+      .topbar, main > .intro, .editor, .mode-note, .preview-toolbar { display: none !important; }
+      main { width: auto; margin: 0; padding: 0; }
+      .workspace, .preview-wrap, .paper-stack { display: block; margin: 0; padding: 0; }
+      .paper {
+        width: var(--paper-width) !important;
+        height: var(--paper-height) !important;
+        aspect-ratio: auto !important;
+        margin: 0;
+        padding: var(--paper-inset-y) var(--paper-inset-x);
+        overflow: hidden;
+        box-shadow: none;
+        break-after: page;
+        page-break-after: always;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+      .paper:last-child { break-after: auto; page-break-after: auto;       }
+      .paper-header { height: 8%; font-size: 9pt; }
+      .paper-footer { font-size: 7pt; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">Aa</div>
+      <div>
+        <h1>英文練習紙</h1>
+        <p>LETTER LINES · HANDWRITING PRACTICE</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="button" id="settings-toggle" type="button" aria-expanded="false" aria-controls="settings-panel">
+        <span class="button-icon" aria-hidden="true">⚙</span>紙張設定
+      </button>
+      <button class="button button-primary" id="print-button" type="button">
+        <span class="button-icon" aria-hidden="true">⤓</span>列印 / 存成 PDF
+      </button>
+    </div>
+    <section class="settings-panel" id="settings-panel" aria-label="紙張設定" hidden>
+      <h2 class="settings-title">版面與紙張</h2>
+      <div class="settings-grid">
+        <div class="field">
+          <label for="paper-size">紙張大小</label>
+          <select id="paper-size">
+            <option value="A4">A4</option>
+            <option value="Letter">Letter</option>
+            <option value="A5">A5</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="orientation">列印方向</label>
+          <select id="orientation">
+            <option value="portrait">直向</option>
+            <option value="landscape">橫向</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="rows-per-page">每頁練習列數</label>
+          <input id="rows-per-page" type="number" min="1" max="26" value="13" inputmode="numeric">
+        </div>
+        <div class="field">
+          <label for="line-height">每列高度（mm）</label>
+          <input id="line-height" type="number" min="10" max="30" step="1" value="18" inputmode="numeric">
+        </div>
+        <div class="field">
+          <span class="field-label">練習提示</span>
+          <label class="checkbox-field" for="show-examples">
+            <input id="show-examples" type="checkbox" checked>
+            顯示淡色描寫文字
+          </label>
+        </div>
+        <p class="setting-note" id="setting-note">列印時請選「實際大小」或「縮放至可列印範圍」。</p>
+      </div>
+    </section>
+  </header>
+
+  <main>
+    <section class="intro">
+      <div>
+        <h2 id="intro-title">英文字母練習紙</h2>
+        <p id="intro-description">依照字母順序練習大小寫，列印即可開始書寫。</p>
+        <div class="worksheet-modes" role="group" aria-label="練習紙樣式">
+          <button class="mode-button" id="alphabet-mode" type="button" aria-pressed="true">字母練習紙</button>
+          <button class="mode-button" id="custom-mode" type="button" aria-pressed="false">自訂文字練習</button>
+        </div>
+      </div>
+      <span class="page-count" id="page-count" aria-live="polite"></span>
+    </section>
+
+    <div class="workspace">
+      <section class="editor" id="alphabet-editor" aria-label="字母提示編輯器">
+        <div class="editor-head">
+          <h3>深色提示文字</h3>
+          <span>可逐格修改</span>
+        </div>
+        <div class="alphabet-editor-list" id="alphabet-editor-list"></div>
+      </section>
+      <section class="editor" id="custom-editor" aria-label="練習內容編輯器" hidden>
+        <div class="editor-head">
+          <h3>練習內容</h3>
+          <span id="row-total"></span>
+        </div>
+        <div class="row-list" id="row-list"></div>
+        <div class="editor-foot">
+          <button class="button" id="add-row" type="button">＋ 新增一行</button>
+          <button class="button" id="clear-rows" type="button">清空全部文字</button>
+        </div>
+      </section>
+
+      <section class="preview-wrap" aria-label="列印預覽">
+        <div class="preview-toolbar">
+          <strong>紙張預覽</strong>
+          <span id="paper-description">A4 · 直向</span>
+        </div>
+        <div class="paper-stack" id="paper-stack"></div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    (() => {
+      const fontOptions = [
+        { value: "round", label: "圓潤手寫", css: '"Comic Sans MS", "Trebuchet MS", cursive' },
+        { value: "serif", label: "經典襯線", css: 'Georgia, "Times New Roman", serif' },
+        { value: "sans", label: "清晰黑體", css: '"Arial", "Segoe UI", sans-serif' },
+        { value: "mono", label: "等寬字體", css: '"Courier New", monospace' },
+        { value: "cursive", label: "連筆風格", css: '"Brush Script MT", "Segoe Script", cursive' }
+      ];
+      const paperDimensions = {
+        A4: [210, 297],
+        Letter: [215.9, 279.4],
+        A5: [148, 210]
+      };
+      let rows = [
+        { text: "apple", font: "round", style: "dashed" },
+        { text: "beautiful", font: "serif", style: "light" },
+        { text: "Good morning!", font: "sans", style: "solid" },
+        { text: "butterfly", font: "cursive", style: "dashed" },
+        { text: "Practice makes progress.", font: "mono", style: "light" },
+        { text: "wonderful", font: "round", style: "solid" },
+        { text: "", font: "serif", style: "dashed" },
+        { text: "", font: "sans", style: "solid" },
+        { text: "", font: "round", style: "light" },
+        { text: "", font: "cursive", style: "dashed" }
+      ];
+
+      const alphabetPairs = Array.from({ length: 13 }, (_, index) => {
+        const firstUpper = String.fromCharCode(65 + index * 2);
+        const secondUpper = String.fromCharCode(66 + index * 2);
+        return {
+          left: `${firstUpper}${firstUpper.toLowerCase()}`,
+          right: `${secondUpper}${secondUpper.toLowerCase()}`
+        };
+      });
+      const rowList = document.querySelector("#row-list");
+      const alphabetEditorList = document.querySelector("#alphabet-editor-list");
+      const paperStack = document.querySelector("#paper-stack");
+      const alphabetEditor = document.querySelector("#alphabet-editor");
+      const customEditor = document.querySelector("#custom-editor");
+      const settingsPanel = document.querySelector("#settings-panel");
+      const printPageStyle = document.createElement("style");
+      document.head.append(printPageStyle);
+      const paperSizeInput = document.querySelector("#paper-size");
+      const orientationInput = document.querySelector("#orientation");
+      const rowsPerPageInput = document.querySelector("#rows-per-page");
+      const lineHeightInput = document.querySelector("#line-height");
+      const showExamplesInput = document.querySelector("#show-examples");
+      let worksheetMode = "alphabet";
+      const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      })[char]);
+
+      function renderEditor() {
+        rowList.innerHTML = "";
+        rows.forEach((row, index) => {
+          const card = document.createElement("article");
+          card.className = "row-card";
+          card.innerHTML = `
+            <div class="row-card-head">
+              <span class="row-number">第 ${index + 1} 行</span>
+              <button class="remove-row" type="button" aria-label="刪除第 ${index + 1} 行">×</button>
+            </div>
+            <input class="row-text" type="text" maxlength="100" value="${escapeHtml(row.text)}" placeholder="輸入英文單字或句子…" aria-label="第 ${index + 1} 行文字">
+            <div class="row-controls">
+              <select aria-label="第 ${index + 1} 行字體">
+                ${fontOptions.map((font) => `<option value="${font.value}" ${row.font === font.value ? "selected" : ""}>${font.label}</option>`).join("")}
+              </select>
+              <select aria-label="第 ${index + 1} 行描字樣式">
+                <option value="solid" ${row.style === "solid" ? "selected" : ""}>實線字</option>
+                <option value="dashed" ${row.style === "dashed" ? "selected" : ""}>虛線字</option>
+                <option value="light" ${row.style === "light" ? "selected" : ""}>淡色參考字</option>
+              </select>
+            </div>`;
+          const [fontSelect, styleSelect] = card.querySelectorAll("select");
+          card.querySelector(".row-text").addEventListener("input", (event) => {
+            rows[index].text = event.target.value;
+            renderPreview();
+          });
+          fontSelect.addEventListener("change", (event) => {
+            rows[index].font = event.target.value;
+            renderPreview();
+          });
+          styleSelect.addEventListener("change", (event) => {
+            rows[index].style = event.target.value;
+            renderPreview();
+          });
+          card.querySelector(".remove-row").addEventListener("click", () => {
+            rows.splice(index, 1);
+            renderAll();
+          });
+          rowList.append(card);
+        });
+        document.querySelector("#row-total").textContent = `${rows.length} 行`;
+      }
+
+      function renderAlphabetEditor() {
+        alphabetEditorList.innerHTML = "";
+        alphabetPairs.forEach((pair, index) => {
+          const card = document.createElement("div");
+          card.className = "alphabet-edit-card";
+          card.innerHTML = `
+            <label class="alphabet-edit-label" for="letter-left-${index}">第 ${index + 1} 列 · 左</label>
+            <label class="alphabet-edit-label" for="letter-right-${index}">右</label>
+            <input id="letter-left-${index}" type="text" maxlength="8" value="${escapeHtml(pair.left)}" aria-label="第 ${index + 1} 列左側提示文字">
+            <input id="letter-right-${index}" type="text" maxlength="8" value="${escapeHtml(pair.right)}" aria-label="第 ${index + 1} 列右側提示文字">`;
+          const [leftInput, rightInput] = card.querySelectorAll("input");
+          leftInput.addEventListener("input", (event) => {
+            alphabetPairs[index].left = event.target.value;
+            renderPreview();
+          });
+          rightInput.addEventListener("input", (event) => {
+            alphabetPairs[index].right = event.target.value;
+            renderPreview();
+          });
+          alphabetEditorList.append(card);
+        });
+      }
+
+      function renderPreview() {
+        const paperName = paperSizeInput.value;
+        const orientation = orientationInput.value;
+        const [shortEdge, longEdge] = paperDimensions[paperName];
+        const [width, height] = orientation === "portrait" ? [shortEdge, longEdge] : [longEdge, shortEdge];
+        const lineHeight = Number(lineHeightInput.value);
+        const fitRowsPerColumn = Math.floor(((height - 26) * 0.89) / lineHeight);
+        const maxFitRows = Math.max(1, Math.min(26, fitRowsPerColumn));
+        rowsPerPageInput.max = String(maxFitRows);
+        const rowsPerPage = Math.max(1, Math.min(maxFitRows, Number.parseInt(rowsPerPageInput.value, 10) || 1));
+        rowsPerPageInput.value = String(rowsPerPage);
+        printPageStyle.textContent = `@page { size: ${paperName} ${orientation}; margin: 0; }`;
+        const worksheetRows = worksheetMode === "alphabet" ? alphabetPairs : rows;
+        const chunks = [];
+        for (let index = 0; index < worksheetRows.length; index += rowsPerPage) {
+          chunks.push(worksheetRows.slice(index, index + rowsPerPage));
+        }
+        if (chunks.length === 0) chunks.push([]);
+
+        paperStack.innerHTML = "";
+        chunks.forEach((chunk, pageIndex) => {
+          const page = document.createElement("article");
+          page.className = `paper${orientation === "landscape" ? " landscape" : ""}${worksheetMode === "alphabet" ? " alphabet-sheet" : ""}`;
+          page.style.setProperty("--paper-width", `${width}mm`);
+          page.style.setProperty("--paper-height", `${height}mm`);
+          page.style.setProperty("--paper-ratio", `${width} / ${height}`);
+          page.style.setProperty("--row-height", `${lineHeight}mm`);
+          const filledRows = Array.from(
+            { length: rowsPerPage },
+            (_, index) => chunk[index] || (worksheetMode === "alphabet" ? { left: "", right: "" } : { text: "", font: "round", style: "solid" })
+          );
+          if (worksheetMode === "alphabet") {
+            page.innerHTML = `
+              <div class="paper-inner">
+                <header class="alphabet-header">
+                  <h2 class="alphabet-title">英文字母練習紙</h2>
+                  <div class="alphabet-meta">
+                    <span class="alphabet-meta-item">姓名<span class="alphabet-meta-line"></span></span>
+                    <span class="alphabet-meta-item">班級<span class="alphabet-meta-line"></span></span>
+                    <span class="alphabet-meta-item">日期<span class="alphabet-meta-line"></span></span>
+                  </div>
+                </header>
+                <div class="alphabet-grid" style="grid-template-rows:repeat(${rowsPerPage}, minmax(var(--row-height), 1fr))">
+                  ${filledRows.map((pair) => `
+                    <div class="alphabet-row">
+                      <div class="alphabet-label">${escapeHtml(pair.left)}</div>
+                      <div class="alphabet-practice">
+                        <div class="alphabet-examples${showExamplesInput.checked ? "" : " hidden"}"><span>${escapeHtml(pair.left)}</span><span>${escapeHtml(pair.left)}</span><span>${escapeHtml(pair.left)}</span></div>
+                      </div>
+                      <div class="alphabet-label">${escapeHtml(pair.right)}</div>
+                      <div class="alphabet-practice">
+                        <div class="alphabet-examples${showExamplesInput.checked ? "" : " hidden"}"><span>${escapeHtml(pair.right)}</span><span>${escapeHtml(pair.right)}</span><span>${escapeHtml(pair.right)}</span></div>
+                      </div>
+                    </div>`).join("")}
+                </div>
+                <div class="alphabet-page-footer">${pageIndex + 1}</div>
+              </div>`;
+          } else {
+            page.innerHTML = `
+              <div class="paper-inner">
+                <div class="paper-header">
+                  <span>ENGLISH HANDWRITING PRACTICE</span>
+                  <span>Name<span class="student-line"></span>　Date<span class="student-line" style="width:65px"></span></span>
+                </div>
+                <div class="practice-rows" style="grid-template-rows:repeat(${rowsPerPage}, minmax(var(--row-height), 1fr))">
+                  ${filledRows.map((row) => {
+                    const font = fontOptions.find((option) => option.value === row.font) || fontOptions[0];
+                    return `<div class="practice-row"><span class="practice-text style-${row.style}" style="font-family:${font.css}">${escapeHtml(row.text)}</span></div>`;
+                  }).join("")}
+                  ${chunk.length === 0 ? '<span class="empty-note">在左側新增文字，開始製作你的英文練習紙。</span>' : ""}
+                </div>
+                <div class="paper-footer">${pageIndex + 1}</div>
+              </div>`;
+          }
+          paperStack.append(page);
+        });
+        document.querySelector("#page-count").textContent = `${chunks.length} 頁`;
+        const modeDescription = worksheetMode === "alphabet" ? "A–Z 字母" : "自訂文字";
+        document.querySelector("#paper-description").textContent = `${modeDescription} · ${paperName} · ${orientation === "portrait" ? "直向" : "橫向"} · 每頁 ${rowsPerPage} 列`;
+        document.querySelector("#intro-title").textContent = worksheetMode === "alphabet" ? "英文字母練習紙" : "寫下今天要練習的句子";
+        document.querySelector("#intro-description").textContent = worksheetMode === "alphabet"
+          ? "依照字母順序練習大小寫，列印即可開始書寫。"
+          : "每一行可設定不同文字、字體與描字樣式，完成後即可列印。";
+        document.querySelector("#setting-note").textContent = worksheetMode === "alphabet"
+          ? "可修改每列深色提示文字，並選擇顯示或隱藏淡色描寫字。格線會填滿紙張。"
+          : "可逐列輸入文字；格線會填滿紙張。列印時請選「實際大小」或「縮放至可列印範圍」。";
+      }
+
+      function renderAll() {
+        renderEditor();
+        renderAlphabetEditor();
+        renderPreview();
+        const isAlphabet = worksheetMode === "alphabet";
+        alphabetEditor.hidden = !isAlphabet;
+        customEditor.hidden = isAlphabet;
+        document.querySelector("#alphabet-mode").setAttribute("aria-pressed", String(isAlphabet));
+        document.querySelector("#custom-mode").setAttribute("aria-pressed", String(!isAlphabet));
+      }
+
+      document.querySelector("#settings-toggle").addEventListener("click", (event) => {
+        const button = event.currentTarget;
+        const opening = settingsPanel.hidden;
+        settingsPanel.hidden = !opening;
+        button.setAttribute("aria-expanded", String(opening));
+      });
+      [paperSizeInput, orientationInput, rowsPerPageInput, lineHeightInput].forEach((input) => {
+        input.addEventListener("input", renderPreview);
+        input.addEventListener("change", renderPreview);
+      });
+      lineHeightInput.addEventListener("change", () => {
+        const [shortEdge, longEdge] = paperDimensions[paperSizeInput.value];
+        const pageHeight = orientationInput.value === "portrait" ? longEdge : shortEdge;
+        const maxRows = Math.max(1, Math.min(26, Math.floor(((pageHeight - 26) * 0.89) / Number(lineHeightInput.value))));
+        rowsPerPageInput.value = String(maxRows);
+        renderPreview();
+      });
+      showExamplesInput.addEventListener("change", renderPreview);
+      document.querySelector("#alphabet-mode").addEventListener("click", () => {
+        worksheetMode = "alphabet";
+        rowsPerPageInput.value = "13";
+        renderAll();
+      });
+      document.querySelector("#custom-mode").addEventListener("click", () => {
+        worksheetMode = "custom";
+        rowsPerPageInput.value = "10";
+        renderAll();
+      });
+      document.querySelector("#add-row").addEventListener("click", () => {
+        rows.push({ text: "", font: "round", style: "dashed" });
+        renderAll();
+        rowList.lastElementChild?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        rowList.lastElementChild?.querySelector(".row-text").focus();
+      });
+      document.querySelector("#clear-rows").addEventListener("click", () => {
+        rows = rows.map((row) => ({ ...row, text: "" }));
+        renderAll();
+      });
+      document.querySelector("#print-button").addEventListener("click", () => window.print());
+      document.addEventListener("click", (event) => {
+        if (!settingsPanel.hidden && !settingsPanel.contains(event.target) && !event.target.closest("#settings-toggle")) {
+          settingsPanel.hidden = true;
+          document.querySelector("#settings-toggle").setAttribute("aria-expanded", "false");
+        }
+      });
+
+      renderAll();
+    })();
+  </script>
+</body>
+</html>

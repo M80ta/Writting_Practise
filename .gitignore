@@ -1,0 +1,19 @@
+# Build outputs and installed dependencies
+**/node_modules/
+**/target/
+**/dist/
+**/test-output/
+**/coverage/
+
+# Local credentials, tooling, and machine settings
+.local/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id_ed25519*
+id_rsa*
+.DS_Store
+Thumbs.db
+*.log
