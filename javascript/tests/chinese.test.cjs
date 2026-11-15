@@ -20,17 +20,37 @@ test("Chinese A4 preset fits thirteen eight-character rows with Han and Zhuyin w
   const rows = [...result.pages[0].matchAll(/class="practice-row"[^>]*data-x="([^"]+)" data-y="([^"]+)" data-width="([^"]+)" data-height="([^"]+)" data-cell-width="([^"]+)"/g)];
   assert.equal(rows.length, 13);
   rows.forEach((row, index) => {
-    assert.equal(Number(row[1]), 9);
+    assert.equal(Number(row[1]), 8);
     assert.equal(Number(row[2]), 36 + index * 19);
-    assert.equal(Number(row[3]), 192);
+    assert.equal(Number(row[3]), 194);
     assert.equal(Number(row[4]), 17);
-    assert.equal(Number(row[5]), 24);
+    assert.equal(Number(row[5]), 22.5);
     assert.ok(Number(row[1]) + Number(row[3]) <= 210 - 8);
     assert.ok(Number(row[2]) + Number(row[4]) <= 297 - 8);
   });
+  assert.ok(result.pages[0].includes('data-cell-pitch="24.5"'));
+  const firstRowCells = [...result.pages[0].matchAll(/class="han-grid" x="([^"]+)"/g)].slice(0, 8);
+  firstRowCells.forEach((cell, column) => assert.ok(Math.abs(Number(cell[1]) - (9 + column * 24.5)) < 0.0001));
   assert.ok(result.pages[0].includes("'Bpmf Zihi Kai', serif"));
   assert.ok(result.pages[0].includes(">姓名</text>"));
   assert.equal(result.warnings.length, 0);
+});
+
+test("Chinese horizontal gaps affect capacity and preserve older worksheets without a gap setting", () => {
+  const config = createChineseWorksheet();
+  const wider = renderWorksheet({ ...config, cell_gap_mm: 3 });
+  assert.equal(wider.columns, 7);
+  assert.ok(wider.warnings.some((warning) => warning.includes("7 格")));
+  const single = renderWorksheet({ ...config, columns: 1 });
+  assert.ok(single.pages[0].includes('data-width="22.5"'));
+  const old = { ...config, cell_width_mm: 24 };
+  delete old.cell_gap_mm;
+  assert.equal(normalizeWorksheet(old).cell_gap_mm, 0);
+  const oldResult = renderWorksheet(old);
+  assert.equal(oldResult.columns, 8);
+  assert.ok(oldResult.pages[0].includes('data-x="9" data-y="36" data-width="192"'));
+  assert.deepEqual(oldResult.pages, renderWorksheet({ ...old, cell_gap_mm: 0 }).pages);
+  for (const gap of [-1, 13, NaN, Infinity, "2"]) assert.throws(() => renderWorksheet({ ...config, cell_gap_mm: gap }), /中文格間距/);
 });
 
 test("IVS pronunciation selectors stay with their Han character and do not consume a second cell", () => {

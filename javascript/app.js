@@ -132,7 +132,8 @@
       if (input.type === "checkbox") input.checked = value;
       else input.value = value;
     });
-    $("#grid-help").textContent = state.grid_style === "english" ? "每行固定兩條水平書寫線。超出紙張的行數與格數會自動調整，預覽會顯示實際配置。" : "中文格型逐格排字，右側預留注音區。田字格大小依字級與格寬高限制；超出紙張容量時會提示。";
+    $("#cell-gap").disabled = state.grid_style === "english";
+    $("#grid-help").textContent = state.grid_style === "english" ? "每行固定兩條水平書寫線。超出紙張的行數與格數會自動調整，預覽會顯示實際配置。" : "中文格型逐格排字，右側預留注音區。格與格間距另計於格寬之外；田字格大小依字級與格寬高限制，超出紙張容量時會提示。";
   }
 
   function renderRepeatControls() {
@@ -297,6 +298,12 @@
   function onPaperClick(group, event) {
     const index = Number(group.dataset.row);
     if (index >= 200) { toast("最多可建立 200 行練習"); return; }
+    const svg = group.ownerSVGElement;
+    const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(svg.getScreenCTM().inverse());
+    const offsetX = point.x - Number(group.dataset.x);
+    const cellPitch = Number(group.dataset.cellPitch);
+    const column = Math.max(0, Math.min(lastResult.columns - 1, Math.floor(offsetX / cellPitch)));
+    if (offsetX - column * cellPitch > Number(group.dataset.cellWidth)) return;
     const wasNew = index >= state.rows.length;
     selectRow(index);
     if (wasNew) scheduleRender();
@@ -307,9 +314,6 @@
       $("#row-text").scrollIntoView({ block: "nearest", behavior: "smooth" });
       return;
     }
-    const svg = group.ownerSVGElement;
-    const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(svg.getScreenCTM().inverse());
-    const column = Math.max(0, Math.min(lastResult.columns - 1, Math.floor((point.x - Number(group.dataset.x)) / state.cell_width_mm)));
     cellTarget = { row: index, column };
     const chars = LetterLines.splitText(row.text);
     const generated = chars.length ? (row.repeat ? chars[column % chars.length] : chars[column] || "") : "";

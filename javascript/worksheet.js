@@ -31,8 +31,8 @@
     return row.font === "kai" ? splitText(text).map((unit) => isHan(unit) && covered.has(Array.from(unit)[0]) ? Array.from(unit)[0] + String.fromCodePoint(0xe01e0) : unit).join("") : text;
   }
   const createRow = (text = "", extra = {}) => ({ text, font: "hand", style: "dashed", font_size_mm: 10.5, placement: "cells", repeat: false, repeat_count: 1, cells: [], ...extra });
-  const createWorksheet = (rows = []) => ({ title: "A little practice, every day.", show_header: true, paper_size: "A4", orientation: "portrait", print_mode: "color", margin_mm: 8, rows_per_page: 15, columns: 16, cell_width_mm: 12, cell_height_mm: 14, row_gap_mm: 2, vertical_guides: true, grid_style: "english", rows });
-  const createChineseWorksheet = () => ({ ...createWorksheet(), title: "每天一點，練出好字。", grid_style: "tian", rows_per_page: 13, columns: 8, cell_width_mm: 24, cell_height_mm: 17,
+  const createWorksheet = (rows = []) => ({ title: "A little practice, every day.", show_header: true, paper_size: "A4", orientation: "portrait", print_mode: "color", margin_mm: 8, rows_per_page: 15, columns: 16, cell_width_mm: 12, cell_height_mm: 14, row_gap_mm: 2, cell_gap_mm: 0, vertical_guides: true, grid_style: "english", rows });
+  const createChineseWorksheet = () => ({ ...createWorksheet(), title: "每天一點，練出好字。", grid_style: "tian", rows_per_page: 13, columns: 8, cell_width_mm: 22.5, cell_height_mm: 17, cell_gap_mm: 2,
     rows: [createRow("一二三四五六", { font: "zhuyin", font_size_mm: 16, style: "solid" }), createRow("一二三四五六", { font: "zhuyin", font_size_mm: 16 }), createRow("日月山水田土", { font: "zhuyin", font_size_mm: 16 }), createRow("你我他她它好", { font: "zhuyin", font_size_mm: 16, style: "light" }), createRow("學校老師同學", { font: "zhuyin", font_size_mm: 16 }), createRow("春夏秋冬天地", { font: "kai", font_size_mm: 16, style: "solid" })] });
   const length = (text) => Array.from(text).length;
   const record = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
@@ -72,6 +72,7 @@
     range(config.cell_width_mm, 8, 35, "格寬 (mm)");
     range(config.cell_height_mm, 10, 30, "格高 (mm)");
     range(config.row_gap_mm, 2, 12, "行距 (mm)");
+    range(config.cell_gap_mm, 0, 12, "中文格間距 (mm)");
     range(config.rows_per_page, 1, 30, "每頁行數", true);
     range(config.columns, 1, 40, "每行格數", true);
     if (!Array.isArray(config.rows) || config.rows.length > 200) throw new Error("練習行格式不正確，最多可建立 200 行。");
@@ -155,8 +156,10 @@
     const margin = config.margin_mm;
     const startY = margin + (config.show_header ? 28 : 0);
     const pitch = config.cell_height_mm + config.row_gap_mm;
+    const cellGap = config.grid_style === "english" ? 0 : config.cell_gap_mm;
+    const cellPitch = config.cell_width_mm + cellGap;
     const rowsPerPage = Math.min(config.rows_per_page, Math.max(1, Math.floor((height - startY - margin - 6 + config.row_gap_mm) / pitch)));
-    const columns = Math.min(config.columns, Math.max(1, Math.floor((width - 2 * margin) / config.cell_width_mm)));
+    const columns = Math.min(config.columns, Math.max(1, Math.floor((width - 2 * margin + cellGap) / cellPitch)));
     const warnings = [];
     if (rowsPerPage !== config.rows_per_page) warnings.push(`依目前紙張與格高，每頁最多容納 ${rowsPerPage} 行，已自動分頁。`);
     if (columns !== config.columns) warnings.push(`依目前紙張與格寬，每行最多容納 ${columns} 格；未顯示的格子內容仍會保留。`);
@@ -171,7 +174,7 @@
     const ink = gray ? "#363636" : "#334943";
     const rule = gray ? "#8a8a8a" : "#a3bbb0";
     const light = gray ? "#b5b5b5" : "#b5c5bc";
-    const gridWidth = columns * config.cell_width_mm;
+    const gridWidth = columns * config.cell_width_mm + (columns - 1) * cellGap;
     const gridX = (width - gridWidth) / 2;
     const pages = [];
     for (let pageIndex = 0; pageIndex < pageCount; pageIndex++) {
@@ -191,7 +194,7 @@
         const baseline = y + rowHeight * 0.76;
         const clipId = `row-${pageIndex}-${slot}`;
         svg.push(`<defs><clipPath id="${clipId}"><rect x="${number(gridX)}" y="${number(y)}" width="${number(gridWidth)}" height="${rowHeight}"/></clipPath></defs>`);
-        svg.push(`<g class="practice-row" data-row="${index}" data-x="${number(gridX)}" data-y="${number(y)}" data-width="${number(gridWidth)}" data-height="${rowHeight}" data-cell-width="${config.cell_width_mm}"><rect class="row-hit" x="${number(gridX)}" y="${number(y)}" width="${number(gridWidth)}" height="${rowHeight}" fill="transparent"/>`);
+        svg.push(`<g class="practice-row" data-row="${index}" data-x="${number(gridX)}" data-y="${number(y)}" data-width="${number(gridWidth)}" data-height="${rowHeight}" data-cell-width="${config.cell_width_mm}" data-cell-pitch="${number(cellPitch)}"><rect class="row-hit" x="${number(gridX)}" y="${number(y)}" width="${number(gridWidth)}" height="${rowHeight}" fill="transparent"/>`);
         if (config.grid_style === "english") {
           svg.push(line(gridX, top, gridX + gridWidth, top, `stroke="${rule}" stroke-width=".22"`));
           svg.push(line(gridX, baseline, gridX + gridWidth, baseline, `stroke="${rule}" stroke-width=".3"`));
@@ -209,7 +212,7 @@
           const chars = splitText(effectiveRow.text);
           for (let col = 0; col < columns; col++) {
             const generated = chars.length ? (effectiveRow.repeat ? chars[col % chars.length] : chars[col] || "") : "";
-            svg.push(drawChineseCell(config, effectiveRow, effectiveRow.cells[col] ?? generated, gridX + col * config.cell_width_mm, y, ink, rule, light));
+            svg.push(drawChineseCell(config, effectiveRow, effectiveRow.cells[col] ?? generated, gridX + col * cellPitch, y, ink, rule, light));
           }
         } else if (row && row.style !== "blank") {
           if (row.placement === "flow") {

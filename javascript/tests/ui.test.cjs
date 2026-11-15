@@ -79,6 +79,8 @@ test("editing, exact counts, paper settings, print, local restore and JSON work 
   assert.equal($("#row-gap").value, "2");
   assert.equal($("#cell-width").value, "12");
   assert.equal($("#cell-height").value, "14");
+  assert.equal($("#cell-gap").value, "0");
+  assert.ok($("#cell-gap").disabled);
   assert.ok($("#actual-layout").textContent.includes("15 行 × 16 格"));
 
   input("#row-text", "WWWWWWWWWW <safe>&", "input");
@@ -217,8 +219,10 @@ test("Chinese entry edits polyphonic glyphs, preserves readings, and prints Chin
   assert.equal($$("#paper-stack .han-grid").length, 104);
   assert.equal($("#margin").value, "8");
   assert.equal($("#row-gap").value, "2");
-  assert.equal($("#cell-width").value, "24");
+  assert.equal($("#cell-width").value, "22.5");
   assert.equal($("#cell-height").value, "17");
+  assert.equal($("#cell-gap").value, "2");
+  assert.equal($("#cell-gap").disabled, false);
   assert.ok($("#actual-layout").textContent.includes("13 行 × 8 格"));
   assert.ok($("#row-placement option[value=flow]").disabled);
   $("#paper-stack .practice-row").dispatchEvent(new w.MouseEvent("click", { bubbles: true, clientX: 26, clientY: 48 }));
@@ -233,6 +237,22 @@ test("Chinese entry edits polyphonic glyphs, preserves readings, and prints Chin
   await waitFor(ready, "save selected reading");
   assert.equal(savedState().rows[0].cells[0], alternate);
   assert.ok($("#print-pages .practice-row").textContent.includes(alternate));
+  $("#paper-stack .practice-row").dispatchEvent(new w.MouseEvent("click", { bubbles: true, clientX: 31, clientY: 48 }));
+  assert.equal($("#cell-dialog").open, false, "the horizontal gap must not open a cell editor");
+  $("#paper-stack .practice-row").dispatchEvent(new w.MouseEvent("click", { bubbles: true, clientX: 177, clientY: 48 }));
+  assert.ok($("#cell-title").textContent.includes("第 7 格"));
+  $("#cell-text").value = "好";
+  $("#cell-form").dispatchEvent(new w.Event("submit", { bubbles: true, cancelable: true }));
+  await waitFor(ready, "edit a later cell using its horizontal pitch");
+  assert.equal(savedState().rows[0].cells[6], "好");
+  assert.ok($("#print-pages .practice-row").textContent.includes("好"));
+  input("#cell-gap", "4");
+  await waitFor(ready, "change Chinese horizontal spacing");
+  assert.ok($("#actual-layout").textContent.includes("13 行 × 7 格"));
+  assert.equal($("#paper-stack .practice-row").dataset.cellPitch, "26.5");
+  input("#cell-gap", "2");
+  await waitFor(ready, "restore Chinese horizontal spacing");
+  assert.ok($("#actual-layout").textContent.includes("13 行 × 8 格"));
   input("#row-font", "kai");
   await waitFor(ready, "hide annotation without losing reading");
   assert.equal(savedState().rows[0].cells[0], alternate);
@@ -248,6 +268,8 @@ test("Chinese entry edits polyphonic glyphs, preserves readings, and prints Chin
   await waitFor(restored.ready, "restore Chinese project");
   assert.equal(restored.savedState().rows[0].cells[0], alternate);
   assert.equal(restored.$("#grid-style").value, "mi");
+  assert.equal(restored.savedState().cell_gap_mm, 2);
+  assert.equal(restored.$("#cell-gap").value, "2");
   $("#print-button").click();
   await waitFor(() => w.printCalls === 1, "Chinese print preparation");
   $("[data-template=words]").click();
@@ -259,6 +281,8 @@ test("Chinese entry edits polyphonic glyphs, preserves readings, and prints Chin
   assert.equal($("#row-gap").value, "2");
   assert.equal($("#cell-width").value, "12");
   assert.equal($("#cell-height").value, "14");
+  assert.equal($("#cell-gap").value, "0");
+  assert.ok($("#cell-gap").disabled);
   assert.ok($("#actual-layout").textContent.includes("15 行 × 16 格"));
   const blocked = setup(null, { url, fontFailure: true });
   await waitFor(() => blocked.$("#warning").textContent.includes("注音字型未載入"), "report missing annotation font");
