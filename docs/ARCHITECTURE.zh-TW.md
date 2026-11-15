@@ -38,9 +38,13 @@ flowchart LR
 
 編排檔外層是 `{ "version": 1, "worksheet": { ... } }`。`worksheet` 包含紙張大小、方向、色彩、邊界、行數／格數、格寬／格高／行距、抬頭與 `rows`。
 
-每行包含 `text`、`font`、`style`、`font_size_mm`、`placement`、`repeat`、`repeat_count` 與 `cells`。`repeat_count` 是單字／句子總份數（1–100）；`repeat` 控制逐格循環填滿；`cells` 的 `null` 表示使用行文字，空字串表示刻意留白。文字、數值、枚舉、資料大小與未知欄位皆會驗證；文字插入 SVG 前會 XML 跳脫。
+每行包含 `text`、`font`、`style`、`font_size_mm`、`placement`、`repeat`、`repeat_count`、`practice_style`、`blank_cells`、`sequence_number` 與 `cells`。`repeat_count` 是單字／句子總份數（1–100）；`repeat` 控制逐格循環填滿；`cells` 的 `null` 表示使用行文字，空字串表示刻意留白。文字、數值、枚舉、資料大小與未知欄位皆會驗證；文字插入 SVG 前會 XML 跳脫。
 
-`grid_style` 預設為 `english`，另可選 `tian`、`mi`、`square`。中文格型使用逐格排列，字型 `zhuyin` 與 `kai` 分別顯示附注音與無注音字形。漢字與 IVS 讀音標記以 grapheme 分組，不會拆成多個格子；原始讀音選擇儲存在文字／格子覆寫中。`kai` 只在繪製時使用 U+E01E0，不修改儲存的原讀音。
+`placement: "practice"` 是中英文共用的批次單字練習模式：`style` 控制第一份，`practice_style` 控制其餘份數，`blank_cells` 是右側至少保留的空白格數，`sequence_number` 是明確存下的詞語序號（null 時不顯示）。英文按詞分成獨立 SVG 文字，量測／縮合只作用於範字區；中文按完整字元逐格繪製，不足以容納指定範字與留白時拒絕該次排版。序號繪於行下方的行距內，使用明確序號，因此跨頁不會重設；追加的空白行不編號。
+
+純函式 `parseWordList` 支援逐行、逗號／頓號／分號／Tab 與引號分隔，保留片語及順序。`createBatchRows` 驗證批次參數，將「後續 n 份」轉成 `repeat_count = n + 1`，建立編號行與可選空白行；行數包含空白行，最多 200 行。`app.js` 先組出候選編排、完成驗證與排版，再取代或追加到現有資料，解析或容量錯誤不會清掉原編排。
+
+`grid_style` 預設為 `english`，另可選 `tian`、`mi`、`square`。中文格型支援逐格排列與批次練習模式，字型 `zhuyin` 與 `kai` 分別顯示附注音與無注音字形。漢字與 IVS 讀音標記以 grapheme 分組，不會拆成多個格子；原始讀音選擇儲存在文字／格子覆寫中。`kai` 只在繪製時使用 U+E01E0，不修改儲存的原讀音。
 
 中文字型依需要才載入，失敗時阻擋列印並清除舊列印副本。中文入口使用 `letter-lines.javascript.chinese.v1`；一般入口仍使用原 key。中文擴充編排只能由新版 JavaScript 載入，Rust 參考版不支援新增格型與字型欄位。
 
@@ -51,6 +55,8 @@ flowchart LR
 JavaScript 版使用 `letter-lines.javascript.v1` 作為 localStorage key；Rust 版使用另一個 key。瀏覽器來源也會隔離不同網址的資料。JSON 是兩版移轉編排的介面，載入舊的 `repeat: true` 單字／句子資料時，先換算為明確次數。
 
 缺少 `cell_gap_mm` 的舊編排會補為 0，保留原本沒有額外水平間距的版面；只有新中文範本預設使用 2mm。格間距會隨 JSON 與自動儲存保留。
+
+舊行沒有批次欄位時，預設為後續虛線樣式、2 個預留空白格及不顯示序號；這些欄位只在相應模式使用，不影響原本逐格／連續模式的輸出。新增批次欄位仍使用 JavaScript v1 外層，舊 Rust 參考版無法讀取這些擴充欄位。
 
 ## 測試與部署
 

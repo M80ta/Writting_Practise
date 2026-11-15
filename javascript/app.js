@@ -77,7 +77,7 @@
       card.setAttribute("aria-pressed", String(index === activeRow));
       const number = document.createElement("span");
       number.className = "row-number";
-      number.textContent = String(index + 1).padStart(2, "0");
+      number.textContent = String(row.sequence_number ?? index + 1).padStart(2, "0");
       const content = document.createElement("span");
       content.className = "row-card-body";
       const text = document.createElement("span");
@@ -86,7 +86,7 @@
       text.textContent = LetterLines.displayText(row, row.text || (row.cells.some((cell) => cell) ? "自訂格子內容" : "Blank practice"));
       const meta = document.createElement("span");
       meta.className = "row-card-meta";
-      meta.textContent = `${FONTS[row.font].label} · ${row.placement === "flow" ? `單字／句子 · ${row.repeat_count} 次` : "逐格書寫"}`;
+      meta.textContent = `${FONTS[row.font].label} · ${row.placement === "practice" ? `單字練習 · ${row.repeat_count} 份 · 留白 ${row.blank_cells} 格` : row.placement === "flow" ? `單字／句子 · ${row.repeat_count} 次` : "逐格書寫"}`;
       const style = document.createElement("span");
       style.className = "row-card-style";
       style.textContent = STYLES[row.style];
@@ -138,9 +138,17 @@
 
   function renderRepeatControls() {
     const row = state.rows[activeRow];
+    const practice = row.placement === "practice";
     $("#cell-repeat-control").hidden = row.placement !== "cells";
-    $("#flow-repeat-control").hidden = row.placement !== "flow";
+    $("#flow-repeat-control").hidden = row.placement === "cells";
     $("#row-repeat-count").value = row.repeat_count;
+    $("#repeat-count-label").textContent = practice ? "範字總份數（含第一份）" : "重複次數";
+    $("#repeat-count-help").textContent = practice ? "至少 1 份。第一份使用上方樣式，其餘使用後續樣式，右側保留空白格。" : "1 次只顯示一份範字；較長內容會縮合至行寬。";
+    $("#row-style-label").textContent = practice ? "第一份範字樣式" : "範字樣式";
+    $("#practice-row-controls").hidden = !practice;
+    $("#row-practice-style").value = row.practice_style;
+    $("#row-blank-cells").value = row.blank_cells;
+    $("#row-sequence-number").value = row.sequence_number ?? "";
   }
 
   function selectRow(index) {
@@ -308,7 +316,7 @@
     selectRow(index);
     if (wasNew) scheduleRender();
     const row = state.rows[index];
-    if (row.placement === "flow") {
+    if (row.placement === "flow" || (row.placement === "practice" && state.grid_style === "english")) {
       $("#row-text").focus();
       $("#row-text").select();
       $("#row-text").scrollIntoView({ block: "nearest", behavior: "smooth" });
@@ -316,7 +324,7 @@
     }
     cellTarget = { row: index, column };
     const chars = LetterLines.splitText(row.text);
-    const generated = chars.length ? (row.repeat ? chars[column % chars.length] : chars[column] || "") : "";
+    const generated = chars.length ? (row.placement === "practice" ? (column < chars.length * row.repeat_count ? chars[column % chars.length] : "") : row.repeat ? chars[column % chars.length] : chars[column] || "") : "";
     $("#cell-title").textContent = `第 ${index + 1} 行・第 ${column + 1} 格`;
     $("#cell-text").value = row.cells[column] ?? generated;
     $("#cell-text").style.fontFamily = row.font === "kai" ? "'DFKai-SB', 'BiauKai', serif" : FONTS[row.font].css;
@@ -417,6 +425,68 @@
     toast("已儲存編排檔，下次可載入繼續編輯");
   }
 
+  function updateBatchSummary() {
+    $("#batch-error").hidden = true;
+    if (!$("#batch-words").value.trim()) { $("#batch-summary").textContent = "貼上單字表開始建立"; return; }
+    try {
+      const count = LetterLines.parseWordList($("#batch-words").value).length;
+      const rows = count * (1 + Number($("#batch-blank-rows").value));
+      const start = Number($("#batch-start-number").value);
+      const total = rows + ($("#batch-operation").value === "append" ? state.rows.length : 0);
+      $("#batch-summary").textContent = `${count} 個詞 · 新增 ${rows} 行 · 序號 ${start}–${start + count - 1}${total > 200 ? " · 超過 200 行上限" : ""}`;
+    } catch (error) { $("#batch-summary").textContent = error.message; }
+  }
+
+  function openBatch() {
+    const chinese = state.grid_style !== "english";
+    const lastNumber = Math.max(0, ...state.rows.map((row) => row.sequence_number ?? 0));
+    $("#batch-font").replaceChildren(...[...$("#row-font").options].map((option) => option.cloneNode(true)));
+    $("#batch-font").value = chinese ? (state.rows[activeRow].font === "kai" ? "kai" : "zhuyin") : (["zhuyin", "kai"].includes(state.rows[activeRow].font) ? "hand" : state.rows[activeRow].font);
+    $("#batch-font-size").value = chinese ? 16 : 10.5;
+    $("#batch-blank-cells").value = chinese ? 2 : 4;
+    $("#batch-start-number").value = Math.min(999999, lastNumber + 1);
+    $("#batch-operation").value = lastNumber ? "append" : "replace";
+    $("#batch-words").placeholder = chinese ? "攪拌\n種植\n切開\n測量\n倒入" : "mix\ncrop\ncut\nmeasure\npour";
+    $("#batch-description").textContent = `目前使用${chinese ? "中文注音格" : "英文雙線"}，沿用 ${$("#paper-summary").textContent} 的紙張設定。每個詞建立一個範字行。`;
+    updateBatchSummary();
+    $("#batch-dialog").showModal();
+    $("#batch-words").focus();
+  }
+
+  let batchBuilding = false;
+  async function applyBatch(event) {
+    event.preventDefault();
+    if (batchBuilding || !$("#batch-form").reportValidity()) return;
+    batchBuilding = true;
+    const submit = $("#batch-form button[type=submit]");
+    submit.disabled = true;
+    $("#batch-error").hidden = true;
+    try {
+      const batch = LetterLines.createBatchRows($("#batch-words").value, {
+        font: $("#batch-font").value, font_size_mm: Number($("#batch-font-size").value),
+        first_style: $("#batch-first-style").value, following_style: $("#batch-following-style").value,
+        additional_count: Number($("#batch-additional-count").value), blank_cells: Number($("#batch-blank-cells").value),
+        blank_rows: Number($("#batch-blank-rows").value), start_number: Number($("#batch-start-number").value),
+      });
+      const append = $("#batch-operation").value === "append";
+      const candidate = LetterLines.normalizeWorksheet({ ...state, rows: append ? [...state.rows, ...batch.rows] : batch.rows });
+      const preview = createPreview(candidate);
+      if (!append && dirty && !window.confirm("建立新練習單會取代目前內容。需要保留時，請先儲存編排，或改選接續加入。確定建立？")) return;
+      const firstRow = append ? state.rows.length : 0;
+      state = candidate;
+      activeRow = firstRow;
+      template = "custom";
+      dirty = true;
+      renderSettings(); renderRowList(); renderEditor(); updatePresets();
+      const valid = await renderPreview(preview);
+      $("#batch-dialog").close();
+      if (valid) toast(`已建立 ${batch.word_count} 個詞${batch.next_number === null ? "，已達序號上限" : `，下一批可從 ${batch.next_number} 開始`}`);
+    } catch (error) {
+      $("#batch-error").textContent = `無法建立：${error.message}`;
+      $("#batch-error").hidden = false;
+    } finally { batchBuilding = false; submit.disabled = false; }
+  }
+
   function validateProject(data) {
     if (!data || data.version !== 1 || !data.worksheet || !Array.isArray(data.worksheet.rows) || !data.worksheet.rows.length) throw new Error("請選擇本工具儲存的 v1 編排檔");
     return LetterLines.normalizeWorksheet(data.worksheet);
@@ -474,6 +544,13 @@
     if (event.target.checkValidity()) updateRepeatCount(event);
   });
   $("#row-repeat-count").addEventListener("change", updateRepeatCount);
+  [["#row-practice-style", "practice_style"], ["#row-blank-cells", "blank_cells"], ["#row-sequence-number", "sequence_number"]].forEach(([selector, key]) => {
+    $(selector).addEventListener("change", (event) => {
+      if (!event.target.checkValidity()) { event.target.reportValidity(); return; }
+      state.rows[activeRow][key] = key === "sequence_number" && event.target.value === "" ? null : event.target.type === "number" ? Number(event.target.value) : event.target.value;
+      changed();
+    });
+  });
   $$("[data-style]").forEach((button) => button.addEventListener("click", () => {
     state.rows[activeRow].style = button.dataset.style;
     changed(); renderEditor();
@@ -482,7 +559,7 @@
     if (!input.checkValidity()) { input.reportValidity(); return; }
     state[input.dataset.setting] = input.type === "checkbox" ? input.checked : input.type === "number" ? Number(input.value) : input.value;
     if (input.dataset.setting === "grid_style") {
-      if (state.grid_style !== "english") state.rows.forEach((row) => { row.placement = "cells"; });
+      if (state.grid_style !== "english") state.rows.forEach((row) => { if (row.placement === "flow") row.placement = "cells"; });
       renderSettings(); renderRowList(); renderEditor();
     }
     dirty = true;
@@ -517,6 +594,15 @@
   }));
   $$("[data-template]").forEach((button) => button.addEventListener("click", () => applyTemplate(button.dataset.template)));
   $("#settings-toggle").addEventListener("click", () => $("#settings-dialog").showModal());
+  $("#batch-open").addEventListener("click", openBatch);
+  $("#batch-close").addEventListener("click", () => $("#batch-dialog").close());
+  $("#batch-example").addEventListener("click", () => {
+    $("#batch-words").value = state.grid_style === "english" ? '"mix" "crop" "cut" "measure" "pour"' : "攪拌\n種植\n切開\n測量\n倒入";
+    updateBatchSummary();
+  });
+  $("#batch-form").addEventListener("input", updateBatchSummary);
+  $("#batch-form").addEventListener("change", updateBatchSummary);
+  $("#batch-form").addEventListener("submit", applyBatch);
   $("#settings-done").addEventListener("click", () => {
     const invalid = $$("[data-setting]").find((input) => !input.checkValidity());
     if (invalid) { invalid.reportValidity(); return; }

@@ -56,20 +56,25 @@
     <div class="workspace">
       <aside class="editor-panel" aria-label="練習內容編輯器">
         <div class="panel-title"><div><h2>練習內容</h2><span>每一行，都能有自己的樣子</span></div><span class="count-pill" id="row-count">6 行</span></div>
+        <button class="button batch-open" id="batch-open" type="button" aria-haspopup="dialog" aria-controls="batch-dialog"><svg class="icon"><use href="#i-plus"/></svg>批次輸入單字表</button>
         <div class="row-list" id="row-list" aria-label="練習行列表"></div>
         <button class="add-row" id="add-row" type="button"><svg class="icon"><use href="#i-plus"/></svg>新增一行練習</button>
         <section class="row-editor" aria-labelledby="editing-title">
           <div class="section-label"><h3 id="editing-title">第 01 行設定</h3><div class="row-actions"><button class="icon-button" id="move-up" title="上移這一行" aria-label="上移這一行" type="button"><svg class="icon"><use href="#i-up"/></svg></button><button class="icon-button" id="move-down" title="下移這一行" aria-label="下移這一行" type="button"><svg class="icon rotate"><use href="#i-up"/></svg></button><button class="icon-button" id="duplicate-row" title="複製這一行" aria-label="複製這一行" type="button"><svg class="icon"><use href="#i-copy"/></svg></button><button class="icon-button danger" id="delete-row" title="刪除這一行" aria-label="刪除這一行" type="button"><svg class="icon"><use href="#i-trash"/></svg></button></div></div>
           <label class="field-label" for="row-text">練習文字 <small id="text-length">0 / 500</small></label>
           <textarea id="row-text" rows="2" maxlength="500" spellcheck="false" placeholder="輸入國字、字母或一句喜歡的話…"></textarea>
-          <div class="field-row"><label>排列方式<select id="row-placement"><option value="cells">逐格字母</option><option value="flow">單字／句子</option></select></label><label>字級 <span class="unit">mm</span><input id="row-font-size" type="number" min="4" max="22" step="0.5" value="10.5"></label></div>
+          <div class="field-row"><label>排列方式<select id="row-placement"><option value="cells">逐格字母</option><option value="flow">單字／句子</option><option value="practice">單字練習＋留白</option></select></label><label>字級 <span class="unit">mm</span><input id="row-font-size" type="number" min="4" max="22" step="0.5" value="10.5"></label></div>
           <label class="field-label" for="row-font">參考字型 <span class="small-tag">7 種字型</span></label>
           <select id="row-font"><option value="hand">Patrick Hand · 自然手寫</option><option value="cursive">Caveat · 流暢手寫</option><option value="sans">Arial · 清楚印刷</option><option value="serif">Georgia · 經典襯線</option><option value="mono">Courier New · 等寬字體</option><option value="zhuyin">字嗨注音標楷 · 附注音</option><option value="kai">字嗨標楷 · 純國字</option></select>
           <div class="font-specimen" id="font-specimen">The quick brown fox.</div>
-          <span class="field-label">範字樣式</span>
+          <span class="field-label" id="row-style-label">範字樣式</span>
           <div class="style-picker" role="group" aria-label="範字樣式"><button type="button" data-style="dashed"><span class="sample-dashed">Aa</span>虛線</button><button type="button" data-style="solid"><span>Aa</span>實線</button><button type="button" data-style="light"><span class="sample-light">Aa</span>淡字</button><button type="button" data-style="blank"><span class="sample-blank">—</span>空白</button></div>
           <label class="check-label" id="cell-repeat-control"><input id="row-repeat" type="checkbox"><span>重複範字，填滿這一行</span></label>
-          <div id="flow-repeat-control" class="field-row" hidden><label for="row-repeat-count">重複次數 <span class="unit">次</span><input id="row-repeat-count" type="number" min="1" max="100" step="1" value="1" required aria-describedby="repeat-count-help"><span id="repeat-count-help" class="field-help">1 次只顯示一份範字；較長內容會縮合至行寬。</span></label></div>
+          <div id="flow-repeat-control" class="field-row" hidden><label for="row-repeat-count"><span id="repeat-count-label">重複次數</span> <span class="unit">次</span><input id="row-repeat-count" type="number" min="1" max="100" step="1" value="1" required aria-describedby="repeat-count-help"><span id="repeat-count-help" class="field-help">1 次只顯示一份範字；較長內容會縮合至行寬。</span></label></div>
+          <div id="practice-row-controls" hidden>
+            <div class="field-row"><label>後續範字樣式<select id="row-practice-style"><option value="dashed">虛線輪廓</option><option value="light">淺色</option></select></label><label>右側留白格數<input id="row-blank-cells" type="number" min="1" max="39" step="1" required></label></div>
+            <label class="field-label" for="row-sequence-number">左下角序號 <span class="unit">空白則不顯示</span></label><input id="row-sequence-number" type="number" min="1" max="999999" step="1">
+          </div>
           <p class="field-help">虛線為字形輪廓描字；空白樣式保留書寫格，方便自由練習。</p><p class="field-help chinese-note" id="chinese-note" hidden>中文注音使用字型預設讀音。點紙上的單格可改選多音字；中文格型使用逐格排列。中文範字須等注音字型載入完成後列印。</p>
         </section>
         <div class="file-actions"><button id="export-project" type="button"><svg class="icon"><use href="#i-download"/></svg>儲存編排</button><button id="import-project" type="button">載入編排<svg class="icon"><use href="#i-arrow"/></svg></button><input id="import-file" type="file" accept=".json,application/json" hidden></div>
@@ -99,6 +104,35 @@
     </section>
     <section><h3><span>03</span> 紙張抬頭</h3><label class="check-label"><input id="show-header" data-setting="show_header" type="checkbox"><span>顯示標題、姓名與日期欄</span></label><label class="field-label" for="worksheet-title">紙張標題</label><input id="worksheet-title" data-setting="title" type="text" maxlength="80" placeholder="A little practice, every day."></section>
   </div><div class="dialog-footer"><p id="actual-layout">變更會即時套用到紙張</p><button class="button primary" id="settings-done" type="button">完成設定<svg class="icon"><use href="#i-check"/></svg></button></div></dialog>
+
+  <dialog id="batch-dialog" class="settings-dialog batch-dialog" aria-labelledby="batch-title" aria-describedby="batch-description">
+    <div class="dialog-heading"><div><p class="eyebrow">ONE LIST, A PAGE OF PRACTICE</p><h2 id="batch-title">批次建立單字練習單</h2></div><button class="icon-button" type="button" id="batch-close" aria-label="關閉批次輸入"><svg class="icon"><use href="#i-close"/></svg></button></div>
+    <form id="batch-form">
+      <div class="settings-content">
+        <p class="field-help" id="batch-description">每個單字或詞語建立一行，沿用目前的紙張設定。</p>
+        <section>
+          <div class="batch-list-heading"><label class="field-label" for="batch-words">單字或詞語表</label><button class="batch-example" id="batch-example" type="button">填入範例</button></div>
+          <textarea id="batch-words" rows="6" maxlength="100000" required spellcheck="false" placeholder="mix&#10;crop&#10;cut&#10;measure&#10;pour" aria-describedby="batch-list-help"></textarea>
+          <p class="field-help" id="batch-list-help">每行一詞、逗號／頓號分隔，或輸入 "mix" "crop" "cut"。片語如 ice cream 可單獨放一行。</p>
+        </section>
+        <section>
+          <h3><span>01</span> 範字與留白</h3>
+          <div class="field-row"><label>第一份範字<select id="batch-first-style"><option value="solid">深色實線</option><option value="dashed">虛線輪廓</option><option value="light">淺色</option></select></label><label>後續範字<select id="batch-following-style"><option value="dashed">虛線輪廓</option><option value="light">淺色</option></select></label></div>
+          <div class="field-row"><label>後續再放幾份<input id="batch-additional-count" type="number" min="0" max="99" step="1" value="1" required></label><label>右側留白格數<input id="batch-blank-cells" type="number" min="1" max="39" step="1" value="4" required></label></div>
+          <p class="field-help">範字總份數＝第一份＋後續份數。0 份後續範字表示只放第一份；右側至少留 1 格自由書寫。</p>
+          <div class="field-row"><label>字型<select id="batch-font"></select></label><label>字級 <span class="unit">mm</span><input id="batch-font-size" type="number" min="4" max="22" step="0.5" value="10.5" required></label></div>
+          <label class="field-label" for="batch-blank-rows">每詞後加幾行空白練習</label><input id="batch-blank-rows" type="number" min="0" max="5" step="1" value="0" required>
+        </section>
+        <section>
+          <h3><span>02</span> 序號與加入方式</h3>
+          <div class="field-row"><label>起始序號<input id="batch-start-number" type="number" min="1" max="999999" step="1" value="1" required></label><label>建立方式<select id="batch-operation"><option value="replace">建立新練習單</option><option value="append">接續加入目前編排</option></select></label></div>
+          <p class="field-help">序號印在每個單字行的左下角，空白練習行不編號。已做到 40，可填 41 接續；也能填 40 從第 40 個重做。</p>
+        </section>
+        <p class="batch-error" id="batch-error" role="alert" hidden></p>
+      </div>
+      <div class="dialog-footer"><p id="batch-summary" aria-live="polite">貼上單字表開始建立</p><button class="button primary" type="submit">產生練習單<svg class="icon"><use href="#i-check"/></svg></button></div>
+    </form>
+  </dialog>
 
   <dialog id="cell-dialog" class="cell-dialog" aria-labelledby="cell-title"><form id="cell-form"><div class="dialog-heading"><h2 id="cell-title">編輯格子</h2><button class="icon-button" type="button" id="cell-close" aria-label="關閉格子編輯"><svg class="icon"><use href="#i-close"/></svg></button></div><label class="field-label" for="cell-text">這一格的文字</label><input id="cell-text" maxlength="80" type="text" spellcheck="false" autocomplete="off"><p class="field-help">可以輸入字母或字串，較長文字會縮合到格內。空白可留作手寫練習。</p><section id="cell-reading-panel" hidden><p class="field-label">選擇注音讀音</p><div class="reading-options" id="reading-options" role="group" aria-label="國字讀音選擇"></div><p class="field-help" id="reading-help"></p></section><div class="cell-actions"><button class="button" id="cell-reset" type="button">還原這一格</button><button class="button primary" type="submit">套用文字<svg class="icon"><use href="#i-check"/></svg></button></div></form></dialog>
 
