@@ -8,15 +8,26 @@ const { createRow, createChineseWorksheet, normalizeWorksheet, renderWorksheet, 
 const data = require("../zhuyin-data.js");
 const count = (svg, pattern) => (svg.match(pattern) || []).length;
 
-test("Chinese preset prints six-character rows with Han and Zhuyin writing areas", () => {
+test("Chinese A4 preset fits thirteen eight-character rows with Han and Zhuyin writing areas", () => {
   const config = createChineseWorksheet();
   const result = renderWorksheet(config);
   assert.equal(config.grid_style, "tian");
   assert.equal(result.pages.length, 1);
-  assert.equal(result.columns, 6);
-  assert.equal(result.rows_per_page, 8);
-  assert.equal(count(result.pages[0], /class="han-grid"/g), 48);
-  assert.equal(count(result.pages[0], /class="zhuyin-grid"/g), 48);
+  assert.equal(result.columns, 8);
+  assert.equal(result.rows_per_page, 13);
+  assert.equal(count(result.pages[0], /class="han-grid"/g), 104);
+  assert.equal(count(result.pages[0], /class="zhuyin-grid"/g), 104);
+  const rows = [...result.pages[0].matchAll(/class="practice-row"[^>]*data-x="([^"]+)" data-y="([^"]+)" data-width="([^"]+)" data-height="([^"]+)" data-cell-width="([^"]+)"/g)];
+  assert.equal(rows.length, 13);
+  rows.forEach((row, index) => {
+    assert.equal(Number(row[1]), 9);
+    assert.equal(Number(row[2]), 36 + index * 19);
+    assert.equal(Number(row[3]), 192);
+    assert.equal(Number(row[4]), 17);
+    assert.equal(Number(row[5]), 24);
+    assert.ok(Number(row[1]) + Number(row[3]) <= 210 - 8);
+    assert.ok(Number(row[2]) + Number(row[4]) <= 297 - 8);
+  });
   assert.ok(result.pages[0].includes("'Bpmf Zihi Kai', serif"));
   assert.ok(result.pages[0].includes(">姓名</text>"));
   assert.equal(result.warnings.length, 0);
@@ -51,12 +62,12 @@ test("Mi and square guides differ while Chinese landscape capacity still paginat
   const tian = renderWorksheet(config).pages[0];
   const mi = renderWorksheet({ ...config, grid_style: "mi" }).pages[0];
   const square = renderWorksheet({ ...config, grid_style: "square" }).pages[0];
-  assert.equal(count(mi, /<line /g) - count(tian, /<line /g), 96);
-  assert.equal(count(tian, /<line /g) - count(square, /<line /g), 96);
+  assert.equal(count(mi, /<line /g) - count(tian, /<line /g), 208);
+  assert.equal(count(tian, /<line /g) - count(square, /<line /g), 208);
   const result = renderWorksheet({ ...config, paper_size: "A5", orientation: "landscape" });
-  assert.equal(result.rows_per_page, 3);
+  assert.equal(result.rows_per_page, 5);
   assert.equal(result.pages.length, 2);
-  assert.ok(result.warnings.some((warning) => warning.includes("3 行")));
+  assert.ok(result.warnings.some((warning) => warning.includes("5 行")));
   assert.throws(() => renderWorksheet({ ...config, rows: [createRow("整句", { placement: "flow" })] }), /逐格/);
 });
 

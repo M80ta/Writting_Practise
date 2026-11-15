@@ -73,8 +73,13 @@ test("editing, exact counts, paper settings, print, local restore and JSON work 
   await waitFor(ready, "initial render");
   assert.equal($$(".row-card").length, 8);
   assert.equal($$(".paper-page").length, 1);
-  assert.equal($$("#paper-stack .practice-row").length, 10);
-  assert.equal($$("#print-pages .practice-row").length, 10);
+  assert.equal($$("#paper-stack .practice-row").length, 15);
+  assert.equal($$("#print-pages .practice-row").length, 15);
+  assert.equal($("#margin").value, "8");
+  assert.equal($("#row-gap").value, "2");
+  assert.equal($("#cell-width").value, "12");
+  assert.equal($("#cell-height").value, "14");
+  assert.ok($("#actual-layout").textContent.includes("15 行 × 16 格"));
 
   input("#row-text", "WWWWWWWWWW <safe>&", "input");
   input("#row-placement", "flow");
@@ -138,7 +143,7 @@ test("editing, exact counts, paper settings, print, local restore and JSON work 
   input("#columns", "40");
   await waitFor(ready, "landscape auto pagination");
   assert.equal($$(".paper-page").length, 2);
-  assert.ok($("#actual-layout").textContent.includes("4 行 × 12 格"));
+  assert.ok($("#actual-layout").textContent.includes("6 行 × 16 格"));
   assert.equal($("#warning").hidden, false);
   const ids = $$('clipPath').map((clip) => clip.id);
   assert.equal(new Set(ids).size, ids.length, "screen and print clip IDs must be distinct");
@@ -162,9 +167,9 @@ test("editing, exact counts, paper settings, print, local restore and JSON work 
   Object.assign(oldProject.worksheet.rows[0], { placement: "flow", text: "apple", repeat: true });
   const legacy = setup(JSON.stringify(oldProject));
   await waitFor(legacy.ready, "restore old auto-fill project");
-  assert.equal(legacy.savedState().rows[0].repeat_count, 4);
-  assert.equal(legacy.$("#row-repeat-count").value, "4");
-  assert.equal(legacy.$("#paper-stack .practice-row").textContent, "apple   apple   apple   apple");
+  assert.equal(legacy.savedState().rows[0].repeat_count, 5);
+  assert.equal(legacy.$("#row-repeat-count").value, "5");
+  assert.equal(legacy.$("#paper-stack .practice-row").textContent, "apple   apple   apple   apple   apple");
 
   $("#export-project").click();
   assert.equal(w.downloads[0].name, "letter-lines-worksheet.json");
@@ -209,7 +214,12 @@ test("Chinese entry edits polyphonic glyphs, preserves readings, and prints Chin
   await waitFor(ready, "Chinese preset");
   assert.equal($("#grid-style").value, "tian");
   assert.equal($("#row-font").value, "zhuyin");
-  assert.equal($$("#paper-stack .han-grid").length, 48);
+  assert.equal($$("#paper-stack .han-grid").length, 104);
+  assert.equal($("#margin").value, "8");
+  assert.equal($("#row-gap").value, "2");
+  assert.equal($("#cell-width").value, "24");
+  assert.equal($("#cell-height").value, "17");
+  assert.ok($("#actual-layout").textContent.includes("13 行 × 8 格"));
   assert.ok($("#row-placement option[value=flow]").disabled);
   $("#paper-stack .practice-row").dispatchEvent(new w.MouseEvent("click", { bubbles: true, clientX: 26, clientY: 48 }));
   $("#cell-text").value = "行";
@@ -240,6 +250,16 @@ test("Chinese entry edits polyphonic glyphs, preserves readings, and prints Chin
   assert.equal(restored.$("#grid-style").value, "mi");
   $("#print-button").click();
   await waitFor(() => w.printCalls === 1, "Chinese print preparation");
+  $("[data-template=words]").click();
+  await waitFor(ready, "English words preset restores English page dimensions");
+  assert.equal($("#grid-style").value, "english");
+  assert.equal($("#paper-size").value, "A4");
+  assert.equal($("#orientation").value, "portrait");
+  assert.equal($("#margin").value, "8");
+  assert.equal($("#row-gap").value, "2");
+  assert.equal($("#cell-width").value, "12");
+  assert.equal($("#cell-height").value, "14");
+  assert.ok($("#actual-layout").textContent.includes("15 行 × 16 格"));
   const blocked = setup(null, { url, fontFailure: true });
   await waitFor(() => blocked.$("#warning").textContent.includes("注音字型未載入"), "report missing annotation font");
   assert.ok(blocked.$("#print-button").disabled);

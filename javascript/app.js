@@ -381,7 +381,7 @@
     if (dirty && !window.confirm("套用範本會取代目前的練習內容。已儲存的編排檔不會受影響。確定套用？")) return;
     if (name === "chinese") state = LetterLines.createChineseWorksheet();
     if (name === "alphabet") state = englishDefaults();
-    if (name === "words") state = { ...state, grid_style: "english" };
+    if (name === "words") state = LetterLines.createWorksheet();
     if (name === "words") state.rows = [
       makeRow("apple", { placement: "flow", style: "solid", repeat_count: 3 }),
       makeRow("apple", { placement: "flow", repeat_count: 3 }),

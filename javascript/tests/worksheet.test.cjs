@@ -4,24 +4,37 @@ const assert = require("node:assert/strict");
 const { createRow, createWorksheet, normalizeWorksheet, renderWorksheet } = require("../worksheet.js");
 
 test("A4 dimensions, two writing lines, three-page pagination, and padded final rows", () => {
-  const result = renderWorksheet(createWorksheet(Array.from({ length: 23 }, () => createRow())));
+  const result = renderWorksheet(createWorksheet(Array.from({ length: 31 }, () => createRow())));
   assert.equal(result.width_mm, 210);
   assert.equal(result.height_mm, 297);
   assert.equal(result.pages.length, 3);
+  assert.equal(result.rows_per_page, 15);
+  assert.equal(result.columns, 16);
+  assert.deepEqual(result.warnings, []);
   for (const page of result.pages) {
-    assert.equal((page.match(/class="practice-row"/g) || []).length, 10);
-    assert.equal((page.match(/stroke-width=".22"/g) || []).length, 10);
-    assert.equal((page.match(/stroke-width=".3"/g) || []).length, 10);
+    assert.equal((page.match(/class="practice-row"/g) || []).length, 15);
+    assert.equal((page.match(/stroke-width=".22"/g) || []).length, 15);
+    assert.equal((page.match(/stroke-width=".3"/g) || []).length, 15);
+    const rows = [...page.matchAll(/class="practice-row"[^>]*data-x="([^"]+)" data-y="([^"]+)" data-width="([^"]+)" data-height="([^"]+)" data-cell-width="([^"]+)"/g)];
+    rows.forEach((row, index) => {
+      assert.equal(Number(row[1]), 9);
+      assert.equal(Number(row[2]), 36 + index * 16);
+      assert.equal(Number(row[3]), 192);
+      assert.equal(Number(row[4]), 14);
+      assert.equal(Number(row[5]), 12);
+      assert.ok(Number(row[1]) + Number(row[3]) <= 210 - 8);
+      assert.ok(Number(row[2]) + Number(row[4]) <= 297 - 8);
+    });
   }
-  assert.ok(result.pages[2].includes("data-row=\"29\""));
+  assert.ok(result.pages[2].includes("data-row=\"44\""));
 });
 
 test("A5 landscape caps rows and columns and reports its actual layout", () => {
   const result = renderWorksheet({ paper_size: "A5", orientation: "landscape", rows_per_page: 30, columns: 40 });
   assert.equal(result.width_mm, 210);
   assert.equal(result.height_mm, 148);
-  assert.equal(result.rows_per_page, 4);
-  assert.equal(result.columns, 12);
+  assert.equal(result.rows_per_page, 6);
+  assert.equal(result.columns, 16);
   assert.equal(result.warnings.length, 2);
 });
 
@@ -78,7 +91,7 @@ test("rejects invalid counts, dimensions, enums, oversized content, and unexpect
 });
 
 test("restores old Rust v1 auto-fill projects without changing their source object", () => {
-  const original = { rows: [{ text: "apple", placement: "flow", repeat: true }] };
+  const original = { margin_mm: 14, columns: 12, cell_width_mm: 15, rows: [{ text: "apple", placement: "flow", repeat: true }] };
   const normalized = normalizeWorksheet(original);
   assert.equal(normalized.rows[0].repeat_count, 4);
   assert.equal(original.rows[0].repeat_count, undefined);
@@ -87,7 +100,7 @@ test("restores old Rust v1 auto-fill projects without changing their source obje
 test("blank styles omit reference text while preserving the two lines", () => {
   const result = renderWorksheet({ rows: [createRow("hidden reference", { style: "blank" })] });
   assert.ok(!result.pages[0].includes("hidden reference"));
-  assert.equal((result.pages[0].match(/stroke-width=".22"/g) || []).length, 10);
+  assert.equal((result.pages[0].match(/stroke-width=".22"/g) || []).length, 15);
 });
 
 test("warns when text or preserved cell overrides exceed the visible columns", () => {

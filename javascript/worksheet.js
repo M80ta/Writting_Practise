@@ -31,8 +31,8 @@
     return row.font === "kai" ? splitText(text).map((unit) => isHan(unit) && covered.has(Array.from(unit)[0]) ? Array.from(unit)[0] + String.fromCodePoint(0xe01e0) : unit).join("") : text;
   }
   const createRow = (text = "", extra = {}) => ({ text, font: "hand", style: "dashed", font_size_mm: 10.5, placement: "cells", repeat: false, repeat_count: 1, cells: [], ...extra });
-  const createWorksheet = (rows = []) => ({ title: "A little practice, every day.", show_header: true, paper_size: "A4", orientation: "portrait", print_mode: "color", margin_mm: 14, rows_per_page: 10, columns: 12, cell_width_mm: 15, cell_height_mm: 16, row_gap_mm: 5, vertical_guides: true, grid_style: "english", rows });
-  const createChineseWorksheet = () => ({ ...createWorksheet(), title: "每天一點，練出好字。", grid_style: "tian", rows_per_page: 8, columns: 6, cell_width_mm: 30, cell_height_mm: 24, row_gap_mm: 4,
+  const createWorksheet = (rows = []) => ({ title: "A little practice, every day.", show_header: true, paper_size: "A4", orientation: "portrait", print_mode: "color", margin_mm: 8, rows_per_page: 15, columns: 16, cell_width_mm: 12, cell_height_mm: 14, row_gap_mm: 2, vertical_guides: true, grid_style: "english", rows });
+  const createChineseWorksheet = () => ({ ...createWorksheet(), title: "每天一點，練出好字。", grid_style: "tian", rows_per_page: 13, columns: 8, cell_width_mm: 24, cell_height_mm: 17,
     rows: [createRow("一二三四五六", { font: "zhuyin", font_size_mm: 16, style: "solid" }), createRow("一二三四五六", { font: "zhuyin", font_size_mm: 16 }), createRow("日月山水田土", { font: "zhuyin", font_size_mm: 16 }), createRow("你我他她它好", { font: "zhuyin", font_size_mm: 16, style: "light" }), createRow("學校老師同學", { font: "zhuyin", font_size_mm: 16 }), createRow("春夏秋冬天地", { font: "kai", font_size_mm: 16, style: "solid" })] });
   const length = (text) => Array.from(text).length;
   const record = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
